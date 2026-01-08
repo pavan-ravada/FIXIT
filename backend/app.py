@@ -1,4 +1,5 @@
 from flask import Flask
+import os
 from flask_cors import CORS
 
 from routes.owner import owner_bp
@@ -10,9 +11,13 @@ app = Flask(__name__)
 # Allow frontend on 5001
 CORS(
     app,
-    resources={r"/*": {"origins": "http://localhost:5001"}},
+    resources={r"/*": {"origins": [
+        "http://localhost:5001",
+        "https://dapper-genie-01eb0f.netlify.app"
+    ]}},
     supports_credentials=True
 )
+
 
 app.register_blueprint(owner_bp, url_prefix="/owner")
 app.register_blueprint(mechanic_bp, url_prefix="/mechanic")
@@ -23,4 +28,5 @@ def health():
     return {"status": "FixIt backend running"}
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    port = int(os.environ.get("PORT", 5002))
+    app.run(host="0.0.0.0", port=port)
