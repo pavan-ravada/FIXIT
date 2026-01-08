@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <script>
+        console.error("🚨 INDEX PAGE LOADED 🚨");
+        console.trace("STACK TRACE: index.html loaded from");
+    </script>
+
+    <meta charset="UTF-8" />
+    <title>FIXIT | Roadside Assistance</title>
+    <link rel="stylesheet" href="./css/base.css" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #0f172a;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+
+        .roles {
+            display: flex;
+            gap: 30px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 30px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: #334155;
+        }
+
+        .card h2 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>FIXIT</h1>
+    <p>Real-Time Roadside Assistance Platform</p>
+
+    <div class="roles">
+        <div class="card" onclick="goOwner()">
+            <h2>Owner</h2>
+            <p>Request help instantly</p>
+        </div>
+
+        <div class="card" onclick="goMechanic()">
+            <h2>Mechanic</h2>
+            <p>Accept nearby jobs</p>
+        </div>
+    </div>
+
+    <script src="./js/index.js"></script>
+</body>
+</html>

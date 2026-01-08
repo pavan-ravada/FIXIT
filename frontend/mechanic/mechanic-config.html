@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Mechanic Configure</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/forms.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="dashboardBtn">Dashboard</p>
+            <p id="historyBtn">History</p>
+            <p id="logoutBtn">Logout</p>
+        </div>
+    </div>
+</div>
+
+<div class="form-container">
+    <h2>Configure Skills</h2>
+
+    <h4>Vehicle Types</h4>
+    <label><input type="checkbox" value="BIKE"> Bike</label>
+    <label><input type="checkbox" value="CAR"> Car</label>
+    <label><input type="checkbox" value="AUTO"> Auto</label>
+    <label><input type="checkbox" value="BUS"> Bus</label>
+    <label><input type="checkbox" value="LORRY"> Lorry</label>
+
+    <h4>Service Types</h4>
+    <label><input type="checkbox" value="PUNCTURE"> Puncture</label>
+    <label><input type="checkbox" value="BATTERY"> Battery</label>
+    <label><input type="checkbox" value="ENGINE"> Engine</label>
+    <label><input type="checkbox" value="TRANSMISSION"> Transmission</label>
+    <label><input type="checkbox" value="LIGHTS"> Lights</label>
+    <label><input type="checkbox" value="BRAKE"> Brake</label>
+
+    <button id="saveBtn">Save Configuration</button>
+
+    <p id="message" class="message"></p>
+</div>
+
+<script type="module" src="./mechanic-config.js"></script>
+
+</body>
+</html>

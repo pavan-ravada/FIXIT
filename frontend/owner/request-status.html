@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Request Status</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+
+    <style>
+        #map {
+            height: 300px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .status-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo" id="logo">FIXIT</div>
+
+        <div class="profile">
+            <span id="profileIcon">👤</span>
+            <div class="dropdown" id="profileMenu">
+                <p id="historyBtn">History</p>
+                <p id="logoutBtn">Logout</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <h2>Request Status</h2>
+
+        <div class="status-box">
+            <p><strong>Status:</strong> <span id="statusText">Loading...</span></p>
+            <p id="mechanicInfo"></p>
+        </div>
+
+        <div id="map"></div>
+
+        <!-- OTP SECTION -->
+        <div id="otpSection" style="display:none;">
+            <input type="text" id="otpInput" placeholder="Enter OTP" />
+            <button id="verifyOtpBtn">Verify OTP</button>
+        </div>
+
+        <!-- COMPLETE JOB -->
+        <button id="completeBtn" style="display:none;">
+            Complete Job
+        </button>
+
+        <!-- CANCEL REQUEST -->
+        <button id="cancelBtn">
+            Cancel Request
+        </button>
+
+        <p id="message"></p>
+    </div>
+
+    <!-- MODULE SCRIPT -->
+    <script type="module" src="request-status.js"></script>
+
+    <!-- GOOGLE MAPS -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places"
+        async
+        defer>
+    </script>
+
+</body>
+</html>

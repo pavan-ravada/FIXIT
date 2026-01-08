@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Owner Register</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/forms.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+    <div class="logo">FIXIT</div>
+</div>
+
+<div class="form-container">
+    <h2>Owner Registration</h2>
+
+    <!-- ✅ FORM ADDED -->
+    <form id="registerForm">
+        <input type="text" id="name" placeholder="Full Name" />
+
+        <input
+            type="tel"
+            id="phone"
+            placeholder="Phone Number"
+            maxlength="10"
+        />
+
+        <input type="password" id="password" placeholder="Password" />
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+
+        <!-- ✅ NO onclick -->
+        <button type="submit">Register</button>
+    </form>
+
+    <p class="link">
+        Already registered?
+        <a href="./owner-login.html">Login</a>
+    </p>
+
+    <p id="message" class="message"></p>
+</div>
+
+<!-- ✅ SINGLE MODULE ENTRY -->
+<script type="module" src="./owner-register.js"></script>
+</body>
+</html>

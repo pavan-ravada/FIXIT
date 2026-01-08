@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Mechanic Login</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/forms.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">FIXIT</div>
+</div>
+
+<div class="form-container">
+    <h2>Mechanic Login</h2>
+
+    <form id="loginForm">
+        <input
+            type="tel"
+            id="phone"
+            placeholder="Phone Number"
+            maxlength="10"
+        />
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Password"
+        />
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p class="link">
+        New mechanic?
+        <a href="./mechanic-register.html">Register</a>
+    </p>
+
+    <p id="message" class="message"></p>
+</div>
+
+<script type="module" src="./mechanic-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Active Job</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+
+    <style>
+        /* 🔥 MAP MUST HAVE WIDTH + HEIGHT */
+        #map {
+            width: 100%;
+            height: 350px;
+            margin-top: 16px;
+            border-radius: 8px;
+        }
+
+        .job-box {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: white;
+        }
+
+        .otp-box {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #0f172a;
+            font-size: 20px;
+            font-weight: bold;
+            color: #22c55e;
+            display: none; /* 🔥 controlled by JS */
+        }
+    </style>
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="historyBtn">History</p>
+            <p id="logoutBtn">Logout</p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= PAGE ================= -->
+<div class="dashboard-container">
+    <h2>Active Job</h2>
+
+    <div class="job-box">
+        <p>
+            <strong>Status:</strong>
+            <span id="statusText">Loading...</span>
+        </p>
+
+        <p id="ownerInfo"></p>
+
+        <!-- 🔐 OTP -->
+        <div class="otp-box" id="otpBox">
+            OTP: <span id="otpValue">----</span>
+        </div>
+    </div>
+
+    <!-- 🗺️ MAP (ROUTE SHOWN HERE) -->
+    <div id="map"></div>
+
+    <p id="message" class="message"></p>
+</div>
+
+<!-- ================= GOOGLE MAPS (LOAD FIRST) ================= -->
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places&callback=onGoogleMapsReady"
+  async
+  defer>
+</script>
+
+
+<!-- ================= PAGE LOGIC ================= -->
+<script type="module" src="./mechanic-active-job.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+from datetime import datetime, timezone, timedelta
+from firebase import get_db
+
+db = get_db()
+
+RADIUS_STEPS = [3, 5, 8, 12]   # km
+MAX_EXPANSIONS = 2            # 2 expansions → 15 minutes total
+
+
+def maybe_expand_radius(req_ref, req):
+    """
+    Handles:
+    1. Progressive radius expansion
+    2. Final timeout after max expansions
+    """
+
+    if req.get("status") != "SEARCHING":
+        return
+
+    now = datetime.now(timezone.utc)
+
+    timeout_at = req.get("timeout_at")
+    if not timeout_at:
+        return
+
+    count = req.get("radius_expanded_count", 0)
+
+    # ⏱️ TIME WINDOW EXPIRED
+    if now > timeout_at:
+
+        # 🔁 EXPAND RADIUS (if allowed)
+        if count < MAX_EXPANSIONS:
+            new_radius = RADIUS_STEPS[count + 1]
+
+            req_ref.update({
+                "search_radius_km": new_radius,
+                "radius_expanded_count": count + 1,
+                "timeout_at": now + timedelta(minutes=5)
+            })
+            return
+
+        # ⛔ FINAL TIMEOUT
+        req_ref.update({
+            "status": "TIMEOUT",
+            "timed_out_at": now
+        })
+
+        # 🔓 Clear owner active request
+        owner_phone = req.get("owner_phone")
+        if owner_phone:
+            owner_docs = (
+                db.collection("owners")
+                .where("phone", "==", owner_phone)
+                .limit(1)
+                .get()
+            )
+            if owner_docs:
+                owner_docs[0].reference.update({
+                    "active_request_id": None
+                })
+
+        return

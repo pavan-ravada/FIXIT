@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Request Mechanic</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/forms.css">
+
+    <style>
+        #map {
+            height: 300px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="historyBtn">History</p>
+            <p id="logoutBtn">Logout</p>
+        </div>
+    </div>
+</div>
+
+<div class="form-container">
+    <h2>Request a Mechanic</h2>
+
+    <!-- ✅ FORM ADDED -->
+    <form id="requestForm">
+
+        <select id="vehicleType">
+            <option value="">Select Vehicle Type</option>
+            <option value="BIKE">Bike</option>
+            <option value="CAR">Car</option>
+        </select>
+
+        <select id="serviceType">
+            <option value="">Select Service Type</option>
+            <option value="PUNCTURE">Puncture</option>
+            <option value="BATTERY">Battery</option>
+            <option value="ENGINE">Engine Issue</option>
+        </select>
+
+        <textarea id="description" placeholder="Describe the issue"></textarea>
+
+        <!-- ✅ LOCATION BUTTON -->
+        <button type="button" id="getLocationBtn">
+            Get Current Location
+        </button>
+
+        <!-- ✅ HIDDEN COORDINATES -->
+        <input type="hidden" id="lat">
+        <input type="hidden" id="lng">
+
+        <div id="map"></div>
+
+        <!-- ✅ SUBMIT BUTTON (NO onclick) -->
+        <button type="submit">
+            Submit Request
+        </button>
+
+    </form>
+
+    <p id="message" class="message"></p>
+</div>
+
+<!-- ✅ GOOGLE MAPS (can stay as-is) -->
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw">
+</script>
+
+<!-- ✅ ONLY ONE JS ENTRY (MODULE) -->
+<script type="module" src="./request-mechanic.js"></script>
+
+</body>
+</html>

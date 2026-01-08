@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Mechanic Dashboard</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="configureBtn">Configure</p>
+            <p id="historyBtn">History</p>
+            <p id="logoutBtn">Logout</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-container">
+    <h2>Mechanic Dashboard</h2>
+
+    <button id="availabilityBtn">Go Online</button>
+    <button id="activeJobBtn" style="display:none;">
+        Go to Active Job
+    </button>
+
+
+    <!-- 🔐 OTP SECTION (CRITICAL FIX) -->
+    <div id="otpBox" style="display:none; margin-top:20px;">
+        <h3>OTP to Share with Owner</h3>
+        <p id="otpValue"
+           style="font-size:28px; font-weight:bold; letter-spacing:4px;">
+        </p>
+    </div>
+
+    <h3>Nearby Requests</h3>
+    <div id="requestsList">
+        <p>No requests yet</p>
+    </div>
+
+    <p id="message" class="message"></p>
+</div>
+
+<script type="module" src="./mechanic-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Mechanic Register</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/forms.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">FIXIT</div>
+</div>
+
+<div class="form-container">
+    <h2>Mechanic Registration</h2>
+
+    <input type="text" id="name" placeholder="Full Name" />
+    <input type="tel" id="phone" placeholder="Phone Number" maxlength="10" />
+
+    <input type="password" id="password" placeholder="Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+
+    <h4>Vehicle Types</h4>
+    <label><input type="checkbox" value="BIKE" class="vehicle"> Bike</label>
+    <label><input type="checkbox" value="CAR" class="vehicle"> Car</label>
+    <label><input type="checkbox" value="AUTO" class="vehicle"> Auto</label>
+    <label><input type="checkbox" value="BUS" class="vehicle"> Bus</label>
+    <label><input type="checkbox" value="LORRY" class="vehicle"> Lorry</label>
+
+    <h4>Service Types</h4>
+    <label><input type="checkbox" value="PUNCTURE" class="service"> Puncture</label>
+    <label><input type="checkbox" value="BATTERY" class="service"> Battery</label>
+    <label><input type="checkbox" value="ENGINE" class="service"> Engine</label>
+    <label><input type="checkbox" value="TRANSMISSION" class="service"> Transmission</label>
+    <label><input type="checkbox" value="LIGHTS" class="service"> Lights</label>
+    <label><input type="checkbox" value="BRAKE" class="service"> Brake</label>
+
+    <button id="registerBtn">Register</button>
+
+    <p class="link">
+        Already registered?
+        <a href="./mechanic-login.html">Login</a>
+    </p>
+
+    <p id="message" class="message"></p>
+</div>
+
+<script type="module" src="./mechanic-register.js"></script>
+</body>
+</html>

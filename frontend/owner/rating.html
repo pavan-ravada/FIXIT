@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        console.log("✅ RATING PAGE LOADED");
+    </script>
+
+    <meta charset="UTF-8">
+    <title>FIXIT | Rate Service</title>
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/forms.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <style>
+        .stars span {
+            font-size: 30px;
+            cursor: pointer;
+            color: gray;
+        }
+
+        .stars span.active {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo" id="logo">FIXIT</div>
+    </div>
+
+    <div class="form-container">
+        <h2>Rate Your Service</h2>
+
+        <div class="stars" id="stars">
+            <span data-value="1">★</span>
+            <span data-value="2">★</span>
+            <span data-value="3">★</span>
+            <span data-value="4">★</span>
+            <span data-value="5">★</span>
+        </div>
+
+        <textarea id="feedback" placeholder="Write feedback (optional)"></textarea>
+
+        <button onclick="submitFeedback()">Submit</button>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+    console.log("🔥 INLINE SCRIPT WORKS");
+    </script>
+
+    <script type="module" src="./rating.js"></script>
+
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIXIT | Owner Dashboard</title>
+
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="historyBtn">History</p>
+            <p id="logoutBtn">Logout</p>
+        </div>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard-container">
+    <h1>Welcome to FIXIT</h1>
+
+    <!-- CREATE REQUEST -->
+    <button id="newRequestBtn">Request Mechanic</button>
+
+    <!-- RESUME ACTIVE REQUEST -->
+    <button id="resumeRequestBtn">Go to Active Request</button>
+</div>
+
+<!-- OWNER DASHBOARD LOGIC -->
+<script type="module" src="./owner-dashboard.js"></script>
+
+</body>
+</html>

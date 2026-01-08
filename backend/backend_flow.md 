@@ -1,0 +1,11 @@
+1. Owner registers
+2. Owner logs in
+3. Owner creates request
+4. Mechanic logs in
+5. Mechanic sets available + location
+6. Mechanic fetches nearby requests
+7. Mechanic accepts request
+8. Live tracking starts
+9. OTP verified
+10. Job completed
+11. Owner gives feedback
