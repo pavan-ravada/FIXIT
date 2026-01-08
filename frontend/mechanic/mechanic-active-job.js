@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from "../js/api.js";
 
 let googleMapsReady = false;
-const DEMO_MODE = true; // 🔥 set false on phone / real GPS
+const DEMO_MODE = false; // 🔥 set false on phone / real GPS
 
 window.onGoogleMapsReady = function () {
   console.log("🟢 Google Maps READY");
@@ -214,49 +214,59 @@ async function fetchJob() {
 let demoLat = null;
 let demoLng = null;
 
-function startLiveTracking() {
-    if (!navigator.geolocation) return;
+function sendMechanicLocation(lat, lng) {
+    return apiPost("/mechanic/update-location", {
+        request_id: requestId,
+        mechanic_phone: mechanic.phone,
+        lat,
+        lng
+    });
+}
 
+function startLiveTracking() {
+
+    // 🔧 DEMO MODE (Laptop / Faculty)
+    if (DEMO_MODE === true) {
+        sendMechanicLocation(17.3850, 78.4867);
+        return;
+    }
+
+    if (!navigator.geolocation) {
+        alert("Geolocation not supported on this device");
+        return;
+    }
+
+    // 🔥 First immediate update
     navigator.geolocation.getCurrentPosition(
         pos => {
-            demoLat = pos.coords.latitude;
-            demoLng = pos.coords.longitude;
+            sendMechanicLocation(
+                pos.coords.latitude,
+                pos.coords.longitude
+            );
         },
-        () => {
-            // fallback (Hyderabad)
-            demoLat = 17.3850;
-            demoLng = 78.4867;
+        err => {
+            alert("Enable GPS / Location permission");
+            console.error(err);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         }
     );
 
-    locationInterval = setInterval(async () => {
-
-        if (DEMO_MODE) {
-            // 🔥 SIMULATE MOVEMENT
-            demoLat += 0.0003;
-            demoLng += 0.0003;
-
-            await apiPost("/mechanic/update-location", {
-                request_id: requestId,
-                mechanic_phone: mechanic.phone,
-                lat: demoLat,
-                lng: demoLng
-            });
-
-        } else {
-            // ✅ REAL GPS (PHONE)
-            navigator.geolocation.getCurrentPosition(
-                async pos => {
-                    await apiPost("/mechanic/update-location", {
-                        request_id: requestId,
-                        mechanic_phone: mechanic.phone,
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude
-                    });
-                }
-            );
-        }
-
+    // 🔁 Continuous tracking
+    locationInterval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                sendMechanicLocation(
+                    pos.coords.latitude,
+                    pos.coords.longitude
+                );
+            },
+            () => {},
+            { enableHighAccuracy: true }
+        );
     }, 5000);
 }
 

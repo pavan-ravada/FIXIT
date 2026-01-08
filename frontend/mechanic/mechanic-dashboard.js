@@ -2,6 +2,8 @@ import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= SESSION ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
+// 🔧 CHANGE THIS ONLY WHEN DEMOING WITHOUT GPS
+const DEMO_MODE = false;
 
 if (!mechanic) {
     window.location.href = "./mechanic-login.html";
@@ -85,28 +87,38 @@ initDashboard();
 
 /* ================= GPS (SAFE FALLBACK) ================= */
 function getCurrentLocation() {
-    return new Promise((resolve) => {
-        if (!navigator.geolocation) {
+    return new Promise((resolve, reject) => {
+
+        // 🔧 DEMO MODE ONLY
+        if (DEMO_MODE === true) {
             return resolve({ lat: 17.3850, lng: 78.4867 });
         }
 
+        if (!navigator.geolocation) {
+            alert("Geolocation not supported");
+            return reject();
+        }
+
         navigator.geolocation.getCurrentPosition(
-            pos => resolve({
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude
-            }),
-            () => resolve({
-                lat: 17.3850,
-                lng: 78.4867
-            }),
+            pos => {
+                resolve({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                });
+            },
+            err => {
+                alert("Unable to get location. Enable GPS / Location permission.");
+                reject(err);
+            },
             {
                 enableHighAccuracy: true,
-                timeout: 5000,
+                timeout: 10000,
                 maximumAge: 0
             }
         );
     });
 }
+
 
 /* ================= TOGGLE AVAILABILITY ================= */
 availabilityBtn.onclick = async () => {

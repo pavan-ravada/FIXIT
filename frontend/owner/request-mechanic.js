@@ -122,17 +122,47 @@ document.addEventListener("DOMContentLoaded", () => {
      📍 GET CURRENT LOCATION (DEV MODE)
      ====================================================== */
   getLocationBtn.addEventListener("click", () => {
-    // 🔧 MOCK LOCATION (Hyderabad)
-    const mockLat = 17.3850;
-    const mockLng = 78.4867;
 
-    latInput.value = mockLat;
-    lngInput.value = mockLng;
+    // ✅ Try real GPS first
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
 
-    loadMap(mockLat, mockLng);
+          latInput.value = lat;
+          lngInput.value = lng;
 
-    alert("Using mock location for development");
+          loadMap(lat, lng);
+
+          alert("Using real GPS location");
+        },
+        (err) => {
+          console.warn("GPS failed, falling back to mock:", err);
+
+          // 🔁 Fallback to mock (laptop / denied permission)
+          const mockLat = 17.3850;
+          const mockLng = 78.4867;
+
+          latInput.value = mockLat;
+          lngInput.value = mockLng;
+
+          loadMap(mockLat, mockLng);
+
+          alert("GPS unavailable. Using demo location");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      alert("Geolocation not supported");
+    }
+
   });
+
 
   /* ======================================================
      🚑 SUBMIT REQUEST
