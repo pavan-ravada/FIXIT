@@ -1,0 +1,26 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+backend/venv/
+
+# Firebase / secrets
+backend/keys/
+firebase_key.json
+
+# macOS junk
+.DS_Store
+
+# Environment files
+.env__pycache__/
+*.pyc
+
+backend/venv/
+
+backend/keys/
+firebase_key.json
+
+.DS_Store
+
+.env

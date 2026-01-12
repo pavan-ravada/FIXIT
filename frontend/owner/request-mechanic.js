@@ -2,6 +2,9 @@ import { apiPost } from "../js/api.js";
 
 console.log("🔥 request-mechanic.js loaded");
 
+// 🔧 DEMO MODE (keep owner close to mechanic at 0,0)
+const DEMO_MODE = true;
+
 document.addEventListener("DOMContentLoaded", () => {
 
   /* ======================================================
@@ -17,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (activeRequestId) {
-    window.location.replace("./request-status.html");
     return;
   }
 
@@ -123,7 +125,21 @@ document.addEventListener("DOMContentLoaded", () => {
      ====================================================== */
   getLocationBtn.addEventListener("click", () => {
 
-    // ✅ Try real GPS first
+    // 🔧 DEMO MODE → force owner near mechanic (0,0)
+    if (DEMO_MODE === true) {
+      const demoLat = 12.9916;
+      const demoLng = 77.6146;
+
+      latInput.value = demoLat;
+      lngInput.value = demoLng;
+
+      loadMap(demoLat, demoLng);
+
+      alert("Using DEMO owner location (within 3km)");
+      return;
+    }
+
+    // 🌍 REAL GPS (production)
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -134,22 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
           lngInput.value = lng;
 
           loadMap(lat, lng);
-
-          alert("Using real GPS location");
         },
         (err) => {
-          console.warn("GPS failed, falling back to mock:", err);
-
-          // 🔁 Fallback to mock (laptop / denied permission)
-          const mockLat = 17.3850;
-          const mockLng = 78.4867;
-
-          latInput.value = mockLat;
-          lngInput.value = mockLng;
-
-          loadMap(mockLat, mockLng);
-
-          alert("GPS unavailable. Using demo location");
+          alert("Enable GPS / Location permission");
+          console.error(err);
         },
         {
           enableHighAccuracy: true,
@@ -160,8 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       alert("Geolocation not supported");
     }
-
   });
+
 
 
   /* ======================================================
@@ -170,21 +174,30 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    // 🔧 FORCE DEMO LOCATION (ABSOLUTE FIX)
+
     const payload = {
       owner_phone: owner.phone,
       vehicle_type: vehicleTypeInput.value,
       service_type: serviceTypeInput.value,
       description: descriptionInput.value,
+
       lat: parseFloat(latInput.value),
       lng: parseFloat(lngInput.value),
     };
+
+console.log("🚨 REQUEST LOCATION SENT:", payload.lat, payload.lng);
+
+
+    console.log("🚨 REQUEST LOCATION:", payload.lat, payload.lng);
+
 
     if (!payload.vehicle_type || !payload.service_type) {
       alert("Please select vehicle and service type");
       return;
     }
 
-    if (!payload.lat || !payload.lng) {
+    if (payload.lat === "" || payload.lng === "" || isNaN(payload.lat) || isNaN(payload.lng)) {
       alert("Please get your location first");
       return;
     }

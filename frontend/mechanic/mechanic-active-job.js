@@ -3,6 +3,9 @@ import { apiGet, apiPost } from "../js/api.js";
 let googleMapsReady = false;
 const DEMO_MODE = false; // 🔥 set false on phone / real GPS
 
+const DEMO_MECH_LAT = 12.9716;   // Bangalore
+const DEMO_MECH_LNG = 77.5946;
+
 window.onGoogleMapsReady = function () {
   console.log("🟢 Google Maps READY");
   googleMapsReady = true;
@@ -42,6 +45,8 @@ let ownerMarker = null;
 let mechanicMarker = null;
 let directionsService = null;
 let directionsRenderer = null;
+let locationInterval = null;
+
 
 function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   if (!googleMapsReady) {
@@ -81,30 +86,82 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   drawRoute(mechLat, mechLng, ownerLat, ownerLng);
 }
 
+function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
+  if (!directionsService || !directionsRenderer) return;
 
-function drawRoute(fromLat, fromLng, toLat, toLng) {
-    if (!directionsService || !directionsRenderer) return;
-
+  const routeRequest = () => {
     directionsService.route(
-        {
-            origin: { lat: fromLat, lng: fromLng },
-            destination: { lat: toLat, lng: toLng },
-            travelMode: google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-            if (status === "OK") {
-                directionsRenderer.setDirections(result);
-            }
+      {
+        origin: { lat: mechLat, lng: mechLng },
+        destination: { lat: ownerLat, lng: ownerLng },
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status !== "OK") {
+          console.error("❌ Route error:", status);
+          return;
         }
+
+        directionsRenderer.setDirections(result);
+
+        const leg = result.routes[0].legs[0];
+
+        // 📏 Distance
+        document.getElementById("routeDistance").innerText =
+          `Distance: ${leg.distance.text}`;
+
+        // ⏱ ETA
+        document.getElementById("routeDuration").innerText =
+          `ETA: ${leg.duration.text}`;
+
+        // 🌍 Open in Google Maps
+        document.getElementById("openGoogleMapsBtn").onclick = () => {
+          const url =
+            `https://www.google.com/maps/dir/?api=1` +
+            `&origin=${mechLat},${mechLng}` +
+            `&destination=${ownerLat},${ownerLng}` +
+            `&travelmode=driving`;
+          window.open(url, "_blank");
+        };
+      }
     );
+  };
+
+  // 🔁 INITIAL DRAW
+  routeRequest();
+
+  // 🔄 LIVE UPDATE EVERY 5 SECONDS
+  if (window.liveRouteInterval) {
+    clearInterval(window.liveRouteInterval);
+  }
+
+  window.liveRouteInterval = setInterval(() => {
+    if (!mechanicMarker) return;
+
+    const pos = mechanicMarker.getPosition();
+    mechLat = pos.lat();
+    mechLng = pos.lng();
+
+    routeRequest();
+  }, 5000);
 }
 
+let lastLat = null;
+let lastLng = null;
 
 function updateMechanicMarker(lat, lng) {
-    if (mechanicMarker) {
-        mechanicMarker.setPosition({ lat, lng });
-    }
+  if (!mechanicMarker) return;
+
+  if (lastLat !== null && lastLng !== null) {
+    rotateMarker(mechanicMarker, lastLat, lastLng, lat, lng);
+  }
+
+  smoothMoveMarker(mechanicMarker, lat, lng);
+
+  lastLat = lat;
+  lastLng = lng;
 }
+
 
 /* ================= FETCH ACTIVE JOB ================= */
 async function fetchJob() {
@@ -136,26 +193,35 @@ async function fetchJob() {
         if (data.ownerLocation) {
 
             if (!map) {
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        initMap(
-                            data.ownerLocation.lat,
-                            data.ownerLocation.lng,
-                            pos.coords.latitude,
-                            pos.coords.longitude
-                        );
-                    },
-                    () => {
-                        // fallback: center on owner
-                        initMap(
-                            data.ownerLocation.lat,
-                            data.ownerLocation.lng,
-                            data.ownerLocation.lat,
-                            data.ownerLocation.lng
-                        );
-                    }
-                );
+                if (DEMO_MODE === true) {
+                    initMap(
+                        data.ownerLocation.lat,
+                        data.ownerLocation.lng,
+                        DEMO_MECH_LAT,
+                        DEMO_MECH_LNG
+                    );
+                } else {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => {
+                            initMap(
+                                data.ownerLocation.lat,
+                                data.ownerLocation.lng,
+                                pos.coords.latitude,
+                                pos.coords.longitude
+                            );
+                        },
+                        () => {
+                            initMap(
+                                data.ownerLocation.lat,
+                                data.ownerLocation.lng,
+                                data.ownerLocation.lat,
+                                data.ownerLocation.lng
+                            );
+                        }
+                    );
+                }
             }
+
 
             if (data.mechanicLocation) {
                 updateMechanicMarker(
@@ -224,52 +290,36 @@ function sendMechanicLocation(lat, lng) {
 }
 
 function startLiveTracking() {
+  if (DEMO_MODE !== true) return;
 
-    // 🔧 DEMO MODE (Laptop / Faculty)
-    if (DEMO_MODE === true) {
-        sendMechanicLocation(17.3850, 78.4867);
-        return;
-    }
+  let mechLat = DEMO_MECH_LAT;
+  let mechLng = DEMO_MECH_LNG;
 
-    if (!navigator.geolocation) {
-        alert("Geolocation not supported on this device");
-        return;
-    }
+  const STEP = 0.0003; // ≈ 30–35 meters per update
 
-    // 🔥 First immediate update
-    navigator.geolocation.getCurrentPosition(
-        pos => {
-            sendMechanicLocation(
-                pos.coords.latitude,
-                pos.coords.longitude
-            );
-        },
-        err => {
-            alert("Enable GPS / Location permission");
-            console.error(err);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        }
-    );
+  locationInterval = setInterval(async () => {
 
-    // 🔁 Continuous tracking
-    locationInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                sendMechanicLocation(
-                    pos.coords.latitude,
-                    pos.coords.longitude
-                );
-            },
-            () => {},
-            { enableHighAccuracy: true }
-        );
-    }, 5000);
+    const ownerPos = ownerMarker?.getPosition();
+    if (!ownerPos) return;
+
+    const ownerLat = ownerPos.lat();
+    const ownerLng = ownerPos.lng();
+
+    // 🔁 Move mechanic slightly toward owner
+    const latDiff = ownerLat - mechLat;
+    const lngDiff = ownerLng - mechLng;
+
+    mechLat += latDiff * STEP;
+    mechLng += lngDiff * STEP;
+
+    // 📡 Send to backend
+    await sendMechanicLocation(mechLat, mechLng);
+
+    // 🧭 Update marker locally (smooth + rotate)
+    updateMechanicMarker(mechLat, mechLng);
+
+  }, 3000); // every 3 seconds
 }
-
 
 
 /* ================= CLEANUP ================= */
@@ -287,7 +337,67 @@ function cleanupAndExit(redirectToHistory = false) {
 }
 
 
-/* ================= INIT ================= */
+function smoothMoveMarker(marker, newLat, newLng, duration = 1000) {
+  const startPos = marker.getPosition();
+  const startLat = startPos.lat();
+  const startLng = startPos.lng();
+
+  const startTime = performance.now();
+
+  function animate(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+
+    const lat = startLat + (newLat - startLat) * progress;
+    const lng = startLng + (newLng - startLng) * progress;
+
+    marker.setPosition({ lat, lng });
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function rotateMarker(marker, fromLat, fromLng, toLat, toLng) {
+  if (!google.maps.geometry) return;
+
+  const heading = google.maps.geometry.spherical.computeHeading(
+    { lat: fromLat, lng: fromLng },
+    { lat: toLat, lng: toLng }
+  );
+
+  marker.setIcon({
+    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+    scale: 5,
+    rotation: heading,
+    fillColor: "#1A73E8",
+    fillOpacity: 1,
+    strokeWeight: 2,
+  });
+}
+
+
+
+let trackingStarted = false;
+
 fetchJob();
 setInterval(fetchJob, 5000);
-startLiveTracking();
+
+if (DEMO_MODE === true) {
+  const waitForDemoReady = setInterval(() => {
+    if (map && ownerMarker && !trackingStarted) {
+      console.log("🟢 DEMO MODE: Starting simulated movement");
+      trackingStarted = true;
+      startLiveTracking();
+      clearInterval(waitForDemoReady);
+    }
+  }, 500);
+} else {
+  if (!trackingStarted) {
+    console.log("📡 REAL MODE: Starting GPS tracking");
+    trackingStarted = true;
+    startLiveTracking();
+  }
+}

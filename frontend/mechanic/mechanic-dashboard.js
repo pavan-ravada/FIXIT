@@ -1,13 +1,14 @@
 import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= SESSION ================= */
-const mechanic = JSON.parse(localStorage.getItem("mechanic"));
-// 🔧 CHANGE THIS ONLY WHEN DEMOING WITHOUT GPS
-const DEMO_MODE = false;
-
-if (!mechanic) {
-    window.location.href = "./mechanic-login.html";
+const mechanicRaw = localStorage.getItem("mechanic");
+if (!mechanicRaw) {
+  window.location.href = "./mechanic-login.html";
 }
+const mechanic = JSON.parse(mechanicRaw);
+
+// 🔧 DEMO ONLY (set false in real GPS)
+const DEMO_MODE = false;
 
 /* ================= ELEMENTS ================= */
 const availabilityBtn = document.getElementById("availabilityBtn");
@@ -15,210 +16,208 @@ const activeJobBtn = document.getElementById("activeJobBtn");
 const requestsList = document.getElementById("requestsList");
 const message = document.getElementById("message");
 
-let isOnline = false;
 let pollInterval = null;
+let isOnline = false;
 
 /* ================= NAVBAR ================= */
 document.getElementById("logo").onclick = () => {
-    window.location.href = "./mechanic-dashboard.html";
+  window.location.href = "./mechanic-dashboard.html";
 };
 
 document.getElementById("configureBtn").onclick = () => {
-    window.location.href = "./mechanic-config.html";
+  window.location.href = "./mechanic-config.html";
 };
 
 document.getElementById("historyBtn").onclick = () => {
-    window.location.href = "./mechanic-history.html";
+  window.location.href = "./mechanic-history.html";
 };
 
 document.getElementById("logoutBtn").onclick = async () => {
-    try {
-        await apiPost("/mechanic/logout", { phone: mechanic.phone });
-    } catch {}
+  try {
+    await apiPost("/mechanic/logout", { phone: mechanic.phone });
+  } catch {}
 
-    localStorage.clear();
-    window.location.href = "../index.html";
+  localStorage.clear();
+  window.location.href = "../index.html";
 };
 
 /* =====================================================
-   🔥 BACKEND → FRONTEND STATE SYNC (CORE FIX)
+   🔥 SINGLE SOURCE OF TRUTH → DATABASE
    ===================================================== */
-async function syncActiveJobFromBackend() {
-    try {
-        const res = await apiGet(`/mechanic/profile?phone=${mechanic.phone}`);
+async function syncMechanicStateFromDB() {
+  try {
+    const res = await apiGet(`/mechanic/profile?phone=${mechanic.phone}`);
 
-        if (res.active_request_id) {
-            localStorage.setItem("activeRequestId", res.active_request_id);
-            return res.active_request_id;
-        } else {
-            localStorage.removeItem("activeRequestId");
-            return null;
-        }
-    } catch (err) {
-        console.error("Failed to sync mechanic state", err);
-        return null;
-    }
-}
+    // 🔒 ACTIVE JOB
+    if (res.active_request_id) {
+      localStorage.setItem("activeRequestId", res.active_request_id);
 
-/* ================= INIT DASHBOARD ================= */
-async function initDashboard() {
-    const activeRequestId = await syncActiveJobFromBackend();
+      availabilityBtn.style.display = "none";
+      requestsList.style.display = "none";
 
-    // 🔒 MECHANIC HAS ACTIVE JOB
-    if (activeRequestId) {
-        availabilityBtn.style.display = "none";
-        requestsList.style.display = "none";
+      activeJobBtn.style.display = "block";
+      activeJobBtn.onclick = () => {
+        window.location.href = "./mechanic-active-job.html";
+      };
 
-        activeJobBtn.style.display = "block";
-        activeJobBtn.onclick = () => {
-            window.location.href = "./mechanic-active-job.html";
-        };
-
-        stopPolling();
-        return;
+      stopPolling();
+      return;
     }
 
     // 🟢 NO ACTIVE JOB
-    availabilityBtn.style.display = "block";
+    localStorage.removeItem("activeRequestId");
     activeJobBtn.style.display = "none";
+    availabilityBtn.style.display = "block";
+    requestsList.style.display = "block";
+
+    // ✅ SYNC AVAILABILITY FROM DB
+    isOnline = res.is_available === true;
+
+    availabilityBtn.textContent = isOnline ? "Go Offline" : "Go Online";
+
+    if (isOnline) {
+      startPolling();
+    } else {
+      stopPolling();
+      requestsList.innerHTML = "<p>No nearby requests</p>";
+    }
+
+  } catch (err) {
+    console.error("Failed to sync mechanic state", err);
+  }
 }
 
-initDashboard();
-
-/* ================= GPS (SAFE FALLBACK) ================= */
+/* ================= GPS ================= */
 function getCurrentLocation() {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
 
-        // 🔧 DEMO MODE ONLY
-        if (DEMO_MODE === true) {
-            return resolve({ lat: 17.3850, lng: 78.4867 });
-        }
+    if (DEMO_MODE === true) {
+      return resolve({ lat: 12.9716, lng: 77.5946});
+    }
 
-        if (!navigator.geolocation) {
-            alert("Geolocation not supported");
-            return reject();
-        }
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported");
+      return reject();
+    }
 
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                resolve({
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                });
-            },
-            err => {
-                alert("Unable to get location. Enable GPS / Location permission.");
-                reject(err);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
-    });
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+      },
+      err => {
+        alert("Enable GPS / Location permission");
+        reject(err);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  });
 }
-
 
 /* ================= TOGGLE AVAILABILITY ================= */
 availabilityBtn.onclick = async () => {
-    message.textContent = "";
+  message.textContent = "";
 
-    try {
-        if (!isOnline) {
-            const loc = await getCurrentLocation();
+  try {
+    if (!isOnline) {
+      const loc = await getCurrentLocation();
 
-            await apiPost("/mechanic/availability", {
-                phone: mechanic.phone,
-                is_available: true,
-                lat: loc.lat,
-                lng: loc.lng
-            });
+      await apiPost("/mechanic/availability", {
+        phone: mechanic.phone,
+        is_available: true,
+        lat: loc.lat,
+        lng: loc.lng
+      });
 
-            isOnline = true;
-            availabilityBtn.textContent = "Go Offline";
-            startPolling();
-
-        } else {
-            await apiPost("/mechanic/availability", {
-                phone: mechanic.phone,
-                is_available: false
-            });
-
-            isOnline = false;
-            availabilityBtn.textContent = "Go Online";
-            stopPolling();
-            requestsList.innerHTML = "<p>No nearby requests</p>";
-        }
-    } catch (err) {
-        message.textContent = err.message || "Failed to update availability";
+    } else {
+      await apiPost("/mechanic/availability", {
+        phone: mechanic.phone,
+        is_available: false
+      });
     }
+
+    // 🔁 RE-SYNC FROM DB (IMPORTANT)
+    await syncMechanicStateFromDB();
+
+  } catch (err) {
+    message.textContent = err.message || "Failed to update availability";
+  }
 };
 
 /* ================= FETCH REQUESTS ================= */
 async function fetchRequests() {
-    if (!isOnline) return;
+  if (!isOnline) return;
 
-    try {
-        const res = await apiGet(`/mechanic/requests?phone=${mechanic.phone}`);
-        const requests = res.requests;
+  try {
+    const res = await apiGet(`/mechanic/requests?phone=${mechanic.phone}`);
+    const requests = res.requests || [];
 
-        requestsList.innerHTML = "";
+    requestsList.innerHTML = "";
 
-        if (!requests.length) {
-            requestsList.innerHTML = "<p>No nearby requests</p>";
-            return;
-        }
-
-        requests.forEach(req => {
-            const div = document.createElement("div");
-            div.className = "request-card";
-
-            div.innerHTML = `
-                <p><strong>Vehicle:</strong> ${req.vehicle_type}</p>
-                <p><strong>Service:</strong> ${req.service_type}</p>
-                <p><strong>Distance:</strong> ${req.distance_km} km</p>
-                <button>Accept</button>
-            `;
-
-            div.querySelector("button").onclick =
-                () => acceptRequest(req.request_id);
-
-            requestsList.appendChild(div);
-        });
-
-    } catch (err) {
-        console.error("Fetch requests failed:", err.message);
+    if (!requests.length) {
+      requestsList.innerHTML = "<p>No nearby requests</p>";
+      return;
     }
+
+    requests.forEach(req => {
+      const div = document.createElement("div");
+      div.className = "request-card";
+
+      div.innerHTML = `
+        <p><strong>Vehicle:</strong> ${req.vehicle_type}</p>
+        <p><strong>Service:</strong> ${req.service_type}</p>
+        <p><strong>Distance:</strong> ${req.distance_km} km</p>
+        <button>Accept</button>
+      `;
+
+      div.querySelector("button").onclick =
+        () => acceptRequest(req.request_id);
+
+      requestsList.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Fetch requests failed:", err.message);
+  }
 }
 
 /* ================= ACCEPT REQUEST ================= */
 async function acceptRequest(requestId) {
-    try {
-        const res = await apiPost(`/mechanic/accept/${requestId}`, {
-            phone: mechanic.phone
-        });
+  try {
+    const res = await apiPost(`/mechanic/accept/${requestId}`, {
+      phone: mechanic.phone
+    });
 
-        localStorage.setItem("activeRequestId", requestId);
-        localStorage.setItem("activeOtp", res.otp);
+    localStorage.setItem("activeRequestId", requestId);
+    localStorage.setItem("activeOtp", res.otp);
 
-        stopPolling();
-        window.location.href = "./mechanic-active-job.html";
+    stopPolling();
+    window.location.href = "./mechanic-active-job.html";
 
-    } catch (err) {
-        alert(err.message || "Failed to accept request");
-    }
+  } catch (err) {
+    alert(err.message || "Failed to accept request");
+  }
 }
 
 /* ================= POLLING ================= */
 function startPolling() {
-    fetchRequests();
-    pollInterval = setInterval(fetchRequests, 5000);
+  stopPolling();
+  fetchRequests();
+  pollInterval = setInterval(fetchRequests, 5000);
 }
 
 function stopPolling() {
-    if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-    }
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
 }
+
+/* ================= INIT ================= */
+syncMechanicStateFromDB();

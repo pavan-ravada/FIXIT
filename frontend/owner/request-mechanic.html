@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
+    <!-- ✅ REQUIRED FOR MOBILE GPS + MAPS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>FIXIT | Request Mechanic</title>
 
     <link rel="stylesheet" href="../css/base.css">
@@ -34,7 +38,6 @@
 <div class="form-container">
     <h2>Request a Mechanic</h2>
 
-    <!-- ✅ FORM ADDED -->
     <form id="requestForm">
 
         <select id="vehicleType">
@@ -52,18 +55,17 @@
 
         <textarea id="description" placeholder="Describe the issue"></textarea>
 
-        <!-- ✅ LOCATION BUTTON -->
+        <!-- ✅ USER GESTURE REQUIRED FOR GPS -->
         <button type="button" id="getLocationBtn">
             Get Current Location
         </button>
 
-        <!-- ✅ HIDDEN COORDINATES -->
+        <!-- ✅ COORDINATES (SET BY JS) -->
         <input type="hidden" id="lat">
         <input type="hidden" id="lng">
 
         <div id="map"></div>
 
-        <!-- ✅ SUBMIT BUTTON (NO onclick) -->
         <button type="submit">
             Submit Request
         </button>
@@ -73,12 +75,14 @@
     <p id="message" class="message"></p>
 </div>
 
-<!-- ✅ GOOGLE MAPS (can stay as-is) -->
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw">
+<!-- ✅ GOOGLE MAPS (LOAD FIRST, async + defer is CORRECT) -->
+<script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw"
+    async
+    defer>
 </script>
 
-<!-- ✅ ONLY ONE JS ENTRY (MODULE) -->
+<!-- ✅ YOUR LOGIC (MODULE, LOAD AFTER MAPS) -->
 <script type="module" src="./request-mechanic.js"></script>
 
 </body>

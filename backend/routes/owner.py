@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from firebase import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from datetime import timedelta
+from datetime import timedelta, timezone
 from utils.request_logic import maybe_expand_radius
 from flask_cors import CORS
 from flask_cors import cross_origin
@@ -12,6 +12,11 @@ from google.cloud import firestore
 owner_bp = Blueprint("owner", __name__)
 CORS(owner_bp)
 db = get_db()
+
+
+# 🔥 RADIUS CONFIG (TEST MODE)
+RADIUS_STEPS = [3, 5, 8, 12]
+EXPANSION_INTERVAL = 30   # seconds (TEST)
 
 # -----------------------------
 # OWNER REGISTRATION
@@ -112,13 +117,19 @@ def create_request():
         owner_ref = owner_docs[0].reference
         owner_data = owner_docs[0].to_dict()
 
-        # 🚫 PREVENT MULTIPLE ACTIVE REQUESTS (ABSOLUTE GUARANTEE)
+        # 🚫 PREVENT MULTIPLE ACTIVE REQUESTS
         if owner_data.get("active_request_id"):
             raise ValueError("Active request already exists")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         req_ref = db.collection("requests").document()
+
+        print("🔥 CREATE_REQUEST CALLED")
+        print("🔥 RADIUS_STEPS =", RADIUS_STEPS)
+        print("🔥 EXPANSION_INTERVAL =", EXPANSION_INTERVAL)
+        print("🔥 NOW =", now)
+
 
         transaction.set(req_ref, {
             "owner_phone": phone,
@@ -128,8 +139,16 @@ def create_request():
             "service_type": service_type,
             "description": description,
 
-            "owner_location": {"lat": lat, "lng": lng},
+            "owner_location": {
+                "lat": lat,
+                "lng": lng
+            },
             "mechanic_location": None,
+
+            # 🔥 REQUIRED FOR RADIUS EXPANSION
+            "search_radius_km": RADIUS_STEPS[0],      # 3 km
+            "radius_expanded_count": 0,
+            "timeout_at": now + timedelta(seconds=EXPANSION_INTERVAL),
 
             "status": "SEARCHING",
 
@@ -140,9 +159,11 @@ def create_request():
             "feedback": None,
 
             "created_at": now,
-            "timeout_at": now + timedelta(minutes=5),
             "completed_at": None
         })
+
+        print("🔥 REQUEST WRITTEN:", req_ref.id)
+
 
         transaction.update(owner_ref, {
             "active_request_id": req_ref.id
@@ -181,7 +202,7 @@ def get_request(request_id):
 
     req = req_doc.to_dict()
 
-    # Auto timeout / radius expand
+    # 🔁 Auto timeout / radius expansion
     maybe_expand_radius(req_ref, req)
     req = req_ref.get().to_dict()
 
@@ -204,24 +225,43 @@ def get_request(request_id):
             }
             mechanic_location = mechanic.get("location")
 
+    print("🔥 GET_REQUEST RESPONSE:", {
+        "search_radius_km": req.get("search_radius_km"),
+        "radius_expanded_count": req.get("radius_expanded_count"),
+        "timeout_at": req.get("timeout_at"),
+        "created_at": req.get("created_at")
+    })
+
+
     return jsonify({
-    "request_id": request_id,
-    "status": req.get("status"),
+        "request_id": request_id,
+        "status": req.get("status"),
 
-    "ownerLocation": req.get("owner_location"),
-    "mechanic": mechanic_data,
-    "mechanicLocation": mechanic_location,
+        # 📍 LOCATIONS
+        "ownerLocation": req.get("owner_location"),
+        "mechanic": mechanic_data,
+        "mechanicLocation": mechanic_location,
 
-    # OTP allowed only before verification
-    "allowOtp": (
-        req.get("status") == "ACCEPTED"
-        and not req.get("otp_verified")
-    ),
+        # 🔍 RADIUS EXPANSION INFO
+        "search_radius_km": req.get("search_radius_km"),
+        "radius_expanded_count": req.get("radius_expanded_count", 0),
+        "timeout_at": req.get("timeout_at"),
 
-    # 🔒 NEW FLAGS (IMPORTANT)
-    "canCancel": req.get("status") in ["SEARCHING", "ACCEPTED"],
-    "canComplete": req.get("status") == "IN_PROGRESS"
-}), 200
+        # ⏱ REQUIRED FOR ELAPSED TIME (🔥 MISSING FIX)
+        "created_at": req.get("created_at"),
+
+        # 🔐 OTP
+        "allowOtp": (
+            req.get("status") == "ACCEPTED"
+            and not req.get("otp_verified")
+        ),
+
+        # 🔒 ACTION FLAGS
+        "canCancel": req.get("status") in ["SEARCHING", "ACCEPTED"],
+        "canComplete": req.get("status") == "IN_PROGRESS"
+    }), 200
+
+
 
 
 

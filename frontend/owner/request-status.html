@@ -18,7 +18,14 @@
         .status-box {
             margin-top: 20px;
             padding: 15px;
-            background: #1e293b;
+            background: #c0c1c2;
+            border-radius: 8px;
+        }
+
+        .radius-box {
+            margin-top: 15px;
+            padding: 12px;
+            background: #b3b4b6;
             border-radius: 8px;
         }
 
@@ -50,7 +57,16 @@
             <p id="mechanicInfo"></p>
         </div>
 
+        <!-- 🔍 RADIUS + COUNTDOWN -->
+        <div class="radius-box">
+            <p id="radiusText">🔍 Searching within ...</p>
+            <p id="timerText">⏱️ Calculating next expansion...</p>
+        </div>
+
         <div id="map"></div>
+
+        <p id="etaText">⏱ ETA: calculating...</p>
+        <p id="distanceText">📏 Distance: calculating...</p>
 
         <!-- OTP SECTION -->
         <div id="otpSection" style="display:none;">
@@ -76,7 +92,7 @@
 
     <!-- GOOGLE MAPS -->
     <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry&callback=onGoogleMapsReady"
         async
         defer>
     </script>

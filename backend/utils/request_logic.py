@@ -4,7 +4,8 @@ from firebase import get_db
 db = get_db()
 
 RADIUS_STEPS = [3, 5, 8, 12]   # km
-MAX_EXPANSIONS = 2            # 2 expansions → 15 minutes total
+MAX_EXPANSIONS = 3            # 2 expansions → 15 minutes total
+EXPANSION_INTERVAL = 30
 
 
 def maybe_expand_radius(req_ref, req):
@@ -32,14 +33,26 @@ def maybe_expand_radius(req_ref, req):
         if count < MAX_EXPANSIONS:
             new_radius = RADIUS_STEPS[count + 1]
 
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print(f"📌 REQUEST ID: {req_ref.id}")
+            print(f"⏱️ NOW: {now}")
+            print(f"⏰ PREVIOUS TIMEOUT_AT: {timeout_at}")
+            print(f"📏 CURRENT RADIUS: {req.get('search_radius_km')} km")
+            print(f"🔁 EXPANSION COUNT: {count}")
+            print(f"🚀 EXPANDING TO: {new_radius} km")
+
             req_ref.update({
                 "search_radius_km": new_radius,
                 "radius_expanded_count": count + 1,
-                "timeout_at": now + timedelta(minutes=5)
+                "timeout_at": now + timedelta(seconds=EXPANSION_INTERVAL)
             })
             return
 
         # ⛔ FINAL TIMEOUT
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print(f"📌 REQUEST ID: {req_ref.id}")
+        print("⛔ FINAL TIMEOUT REACHED")
+
         req_ref.update({
             "status": "TIMEOUT",
             "timed_out_at": now
@@ -60,3 +73,4 @@ def maybe_expand_radius(req_ref, req):
                 })
 
         return
+

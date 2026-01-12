@@ -1,11 +1,8 @@
 from google.cloud import firestore
 import os
 
-# Point to your Firebase service account key
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase_key.json"
-
-# Create Firestore client
-db = firestore.Client()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+KEY_PATH = os.path.join(BASE_DIR, "firebase_key.json")
 
 def get_db():
-    return db
+    return firestore.Client.from_service_account_json(KEY_PATH)

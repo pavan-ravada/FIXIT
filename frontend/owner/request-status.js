@@ -1,79 +1,128 @@
 import { apiGet, apiPost } from "../js/api.js";
 
-document.addEventListener("DOMContentLoaded", () => {
+/* 🔥 Google Maps callback (required) */
+window.onGoogleMapsReady = function () {
+  console.log("🟢 Google Maps READY (Owner)");
+};
 
+document.addEventListener("DOMContentLoaded", () => {
   const ownerRaw = localStorage.getItem("owner");
   const requestId = localStorage.getItem("activeRequestId");
 
-  if (!ownerRaw || !requestId) {
-    console.warn("request-status loaded without required state");
-    return;
-  }
+  if (!ownerRaw || !requestId) return;
 
   const owner = JSON.parse(ownerRaw);
 
   let map = null;
+  let ownerMarker = null;
   let mechanicMarker = null;
+  let directionsService = null;
+  let directionsRenderer = null;
   let statusInterval = null;
-  let isNavigatingAway = false;   // 🔥 HARD LOCK
+  let isNavigatingAway = false;
 
-  /* ================= NAVBAR ================= */
-  document.getElementById("logo")?.addEventListener("click", () => {
-    if (isNavigatingAway) return;
-    window.location.href = "./owner-dashboard.html";
-  });
+  /* ================= GOOGLE MAP ================= */
+  function waitForGoogleMaps(cb) {
+    if (window.google && google.maps) cb();
+    else setTimeout(() => waitForGoogleMaps(cb), 200);
+  }
 
-  document.getElementById("historyBtn")?.addEventListener("click", () => {
-    if (isNavigatingAway) return;
-    window.location.href = "./owner-history.html";
-  });
+  function initMap(ownerLat, ownerLng) {
+    waitForGoogleMaps(() => {
+      if (map) return;
 
-  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-      if (isNavigatingAway) return;
-      isNavigatingAway = true;
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: ownerLat, lng: ownerLng },
+        zoom: 14,
+      });
 
-      try {
-          if (owner?.phone) {
-              await apiPost("/owner/logout", { phone: owner.phone });
-          }
-      } catch {}
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer({
+        map,
+        suppressMarkers: true,
+      });
 
-      localStorage.removeItem("owner");
-      localStorage.removeItem("activeRequestId");
-      localStorage.removeItem("completedRequestId");
-
-      window.location.replace("../index.html");
-  });
-
-
-  /* ================= MAP ================= */
-  function initMap(lat, lng) {
-    if (typeof google === "undefined" || !google.maps) return;
-    if (map) return;
-
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat, lng },
-      zoom: 15
+      ownerMarker = new google.maps.Marker({
+        position: { lat: ownerLat, lng: ownerLng },
+        map,
+        title: "Your Location",
+      });
     });
   }
 
-  function updateMechanicLocation(loc) {
-    if (!map || isNavigatingAway) return;
+  function updateMechanicMarker(lat, lng) {
+    if (!map) return;
 
     if (!mechanicMarker) {
       mechanicMarker = new google.maps.Marker({
-        position: loc,
+        position: { lat, lng },
         map,
-        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+        icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        title: "Mechanic",
       });
     } else {
-      mechanicMarker.setPosition(loc);
+      mechanicMarker.setPosition({ lat, lng });
     }
+  }
+
+  /* ================= ROUTE + ETA ================= */
+  function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
+    if (!directionsService || !directionsRenderer) return;
+
+    directionsService.route(
+      {
+        origin: { lat: mechLat, lng: mechLng },
+        destination: { lat: ownerLat, lng: ownerLng },
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status !== "OK" || !result.routes.length) return;
+
+        directionsRenderer.setDirections(result);
+
+        const leg = result.routes[0].legs[0];
+
+        document.getElementById("etaText").innerText =
+          `⏱ ETA: ${leg.duration.text}`;
+
+        document.getElementById("distanceText").innerText =
+          `📏 Remaining: ${leg.distance.text}`;
+      }
+    );
+  }
+
+  /* ================= RADIUS TIMER ================= */
+  function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
+    const radiusEl = document.getElementById("radiusText");
+    const timerEl = document.getElementById("timerText");
+    if (!radiusEl || !timerEl) return;
+
+    const createdMs = new Date(createdAt).getTime();
+    const timeoutMs = new Date(timeoutAt).getTime();
+
+    if (window.radiusInterval) clearInterval(window.radiusInterval);
+
+    window.radiusInterval = setInterval(() => {
+      const now = Date.now();
+
+      const elapsed = Math.max(0, Math.floor((now - createdMs) / 1000));
+      const remaining = Math.max(0, Math.floor((timeoutMs - now) / 1000));
+
+      const min = String(Math.floor(elapsed / 60)).padStart(2, "0");
+      const sec = String(elapsed % 60).padStart(2, "0");
+
+      const steps = [3, 5, 8, 12];
+      const nextRadius = steps[steps.indexOf(radiusKm) + 1] ?? "—";
+
+      radiusEl.innerText = `🔍 Searching within ${radiusKm} km`;
+      timerEl.innerText =
+        `⏱ Elapsed: ${min}:${sec} | ➡️ Next: ${nextRadius} km in ${remaining}s`;
+    }, 1000);
   }
 
   /* ================= FETCH STATUS ================= */
   async function fetchStatus() {
-    if (isNavigatingAway) return;   // 🔥 STOP EVERYTHING
+    if (isNavigatingAway) return;
 
     try {
       const data = await apiGet(`/owner/request/${requestId}`);
@@ -89,10 +138,38 @@ document.addEventListener("DOMContentLoaded", () => {
           `Mechanic: ${data.mechanic.name} (${data.mechanic.phone})`;
       }
 
-      if (data.mechanicLocation) {
-        updateMechanicLocation(data.mechanicLocation);
+      if (data.mechanicLocation && data.ownerLocation) {
+        updateMechanicMarker(
+          data.mechanicLocation.lat,
+          data.mechanicLocation.lng
+        );
+
+        drawRoute(
+          data.mechanicLocation.lat,
+          data.mechanicLocation.lng,
+          data.ownerLocation.lat,
+          data.ownerLocation.lng
+        );
       }
 
+      /* 🔍 Radius box */
+      const radiusBox = document.querySelector(".radius-box");
+      if (radiusBox) {
+        radiusBox.style.display =
+          data.status === "SEARCHING" ? "block" : "none";
+      }
+
+      if (data.status === "SEARCHING") {
+        updateRadiusUI(
+          data.search_radius_km,
+          data.timeout_at,
+          data.created_at
+        );
+      } else if (window.radiusInterval) {
+        clearInterval(window.radiusInterval);
+      }
+
+      /* 🔘 Buttons */
       const otpSection = document.getElementById("otpSection");
       const cancelBtn = document.getElementById("cancelBtn");
       const completeBtn = document.getElementById("completeBtn");
@@ -101,116 +178,56 @@ document.addEventListener("DOMContentLoaded", () => {
       cancelBtn.style.display = "none";
       completeBtn.style.display = "none";
 
-      if (data.status === "SEARCHING") {
-        cancelBtn.style.display = "block";
-      }
-
+      if (data.status === "SEARCHING") cancelBtn.style.display = "block";
       if (data.status === "ACCEPTED") {
         otpSection.style.display = "block";
         cancelBtn.style.display = "block";
       }
-
-      if (data.status === "IN_PROGRESS") {
-        completeBtn.style.display = "block";
-      }
+      if (data.status === "IN_PROGRESS") completeBtn.style.display = "block";
 
     } catch (err) {
       console.error("Status fetch failed:", err);
     }
   }
-  /* ================= OTP VERIFY ================= */
+
+  /* ================= OTP ================= */
   document.getElementById("verifyOtpBtn")?.addEventListener("click", async () => {
-    if (isNavigatingAway) return;
+    const otp = document.getElementById("otpInput").value.trim();
+    if (!otp) return alert("Enter OTP");
 
-    const otpInput = document.getElementById("otpInput");
-    const otp = otpInput.value.trim();
+    await apiPost(`/owner/verify-otp/${requestId}`, {
+      phone: owner.phone,
+      otp,
+    });
 
-    if (!otp) {
-      alert("Please enter OTP");
-      return;
-    }
-
-    try {
-      await apiPost(`/owner/verify-otp/${requestId}`, {
-        phone: owner.phone,
-        otp
-      });
-
-      // 🔥 Clear input
-      otpInput.value = "";
-
-      // 🔥 Force state re-sync (backend is source of truth)
-      await fetchStatus();
-
-      alert("OTP verified successfully");
-
-    } catch (err) {
-      console.error("OTP verification failed:", err);
-      alert(err.message || "Invalid OTP");
-    }
+    fetchStatus();
   });
 
-  /* ================= CANCEL REQUEST ================= */
-document.getElementById("cancelBtn")?.addEventListener("click", async () => {
-    if (isNavigatingAway) return;
+  /* ================= CANCEL ================= */
+  document.getElementById("cancelBtn")?.addEventListener("click", async () => {
+    isNavigatingAway = true;
+    clearInterval(statusInterval);
 
-    const confirmCancel = confirm(
-      "Are you sure you want to cancel this request?"
-    );
-    if (!confirmCancel) return;
+    await apiPost(`/owner/request/cancel/${requestId}`, {
+      phone: owner.phone,
+    });
 
-    isNavigatingAway = true;          // 🔒 LOCK PAGE
-    clearInterval(statusInterval);    // 🔒 STOP POLLING
-
-    try {
-      await apiPost(`/owner/request/cancel/${requestId}`, {
-        phone: owner.phone            // ✅ BACKEND EXPECTS THIS
-      });
-
-      // 🔒 CLEAN LOCAL STATE
-      localStorage.removeItem("activeRequestId");
-
-      // ➡️ BACK TO DASHBOARD
-      window.location.replace("./owner-dashboard.html");
-
-    } catch (err) {
-      isNavigatingAway = false;
-      console.error("Cancel failed:", err);
-      alert(err.message || "Failed to cancel request");
-    }
+    localStorage.removeItem("activeRequestId");
+    window.location.replace("./owner-dashboard.html");
   });
 
-
-
-  /* ================= COMPLETE JOB ================= */
+  /* ================= COMPLETE ================= */
   document.getElementById("completeBtn")?.addEventListener("click", async () => {
-    if (isNavigatingAway) return;
+    isNavigatingAway = true;
+    clearInterval(statusInterval);
 
-    isNavigatingAway = true;        // 🔥 LOCK PAGE
-    clearInterval(statusInterval); // 🔥 STOP POLLING
+    await apiPost(`/owner/complete/${requestId}`, {
+      owner_phone: owner.phone,
+    });
 
-    try {
-      await apiPost(`/owner/complete/${requestId}`, {
-        owner_phone: owner.phone
-      });
-
-      localStorage.removeItem("activeRequestId");
-      localStorage.setItem("completedRequestId", requestId);
-
-      console.log("✅ COMPLETE CLICKED");
-      console.log("owner =", localStorage.getItem("owner"));
-      console.log("completedRequestId =", localStorage.getItem("completedRequestId"));
-
-
-      // 🔥 FORCE NAVIGATION
-      window.location.href = "rating.html";
-
-
-    } catch (err) {
-      isNavigatingAway = false;
-      console.error("Complete job failed:", err);
-      alert("Failed to complete job");
-    }
+    localStorage.removeItem("activeRequestId");
+    localStorage.setItem("completedRequestId", requestId);
+    window.location.href = "rating.html";
   });
 
   /* ================= START ================= */

@@ -72,16 +72,21 @@
 
     <!-- 🗺️ MAP (ROUTE SHOWN HERE) -->
     <div id="map"></div>
+    <div class="route-info">
+        <p id="routeDistance">Distance: --</p>
+        <p id="routeDuration">ETA: --</p>
+
+        <button id="openGoogleMapsBtn">
+            Open in Google Maps
+        </button>
+    </div>
+
 
     <p id="message" class="message"></p>
 </div>
 
 <!-- ================= GOOGLE MAPS (LOAD FIRST) ================= -->
-<script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places&callback=onGoogleMapsReady"
-  async
-  defer>
-</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places,geometry" async defer></script>
 
 
 <!-- ================= PAGE LOGIC ================= -->
