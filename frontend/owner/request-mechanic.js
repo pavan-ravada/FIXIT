@@ -3,7 +3,7 @@ import { apiPost } from "../js/api.js";
 console.log("🔥 request-mechanic.js loaded");
 
 // 🔧 DEMO MODE (keep owner close to mechanic at 0,0)
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -127,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 🔧 DEMO MODE → force owner near mechanic (0,0)
     if (DEMO_MODE === true) {
+      console.warn("DEMO MODE ACTIVE");
       const demoLat = 12.9916;
       const demoLng = 77.6146;
 

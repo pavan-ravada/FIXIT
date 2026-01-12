@@ -1,10 +1,5 @@
 import { apiGet, apiPost } from "../js/api.js";
 
-/* 🔥 Google Maps callback (required) */
-window.onGoogleMapsReady = function () {
-  console.log("🟢 Google Maps READY (Owner)");
-};
-
 document.addEventListener("DOMContentLoaded", () => {
   const ownerRaw = localStorage.getItem("owner");
   const requestId = localStorage.getItem("activeRequestId");
@@ -21,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let statusInterval = null;
   let isNavigatingAway = false;
 
-  /* ================= GOOGLE MAP ================= */
+  /* ================= GOOGLE MAP SAFE LOADER ================= */
   function waitForGoogleMaps(cb) {
     if (window.google && google.maps) cb();
     else setTimeout(() => waitForGoogleMaps(cb), 200);
@@ -29,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initMap(ownerLat, ownerLng) {
     waitForGoogleMaps(() => {
-      if (map) return;
+      if (map) return; // ✅ init only once
 
       map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: ownerLat, lng: ownerLng },
@@ -129,7 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       document.getElementById("statusText").innerText = data.status;
 
-      if (!map && data.ownerLocation) {
+      // ✅ ALWAYS init map using backend ownerLocation
+      if (data.ownerLocation) {
         initMap(data.ownerLocation.lat, data.ownerLocation.lng);
       }
 
@@ -152,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
 
-      /* 🔍 Radius box */
+      /* 🔍 Radius UI */
       const radiusBox = document.querySelector(".radius-box");
       if (radiusBox) {
         radiusBox.style.display =
