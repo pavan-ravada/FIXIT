@@ -229,7 +229,7 @@ async function fetchJob() {
                     data.mechanicLocation.lng
                 );
 
-                if (data.status === "ON_THE_WAY") {
+                if (["ACCEPTED", "IN_PROGRESS"].includes(data.status)) {
                     drawRoute(
                         data.mechanicLocation.lat,
                         data.mechanicLocation.lng,
@@ -290,35 +290,58 @@ function sendMechanicLocation(lat, lng) {
 }
 
 function startLiveTracking() {
-  if (DEMO_MODE !== true) return;
 
-  let mechLat = DEMO_MECH_LAT;
-  let mechLng = DEMO_MECH_LNG;
+  /* ================= DEMO MODE ================= */
+  if (DEMO_MODE === true) {
+    let mechLat = DEMO_MECH_LAT;
+    let mechLng = DEMO_MECH_LNG;
 
-  const STEP = 0.0003; // ≈ 30–35 meters per update
+    const STEP = 0.0003;
 
-  locationInterval = setInterval(async () => {
+    locationInterval = setInterval(async () => {
+      const ownerPos = ownerMarker?.getPosition();
+      if (!ownerPos) return;
 
-    const ownerPos = ownerMarker?.getPosition();
-    if (!ownerPos) return;
+      const ownerLat = ownerPos.lat();
+      const ownerLng = ownerPos.lng();
 
-    const ownerLat = ownerPos.lat();
-    const ownerLng = ownerPos.lng();
+      mechLat += (ownerLat - mechLat) * STEP;
+      mechLng += (ownerLng - mechLng) * STEP;
 
-    // 🔁 Move mechanic slightly toward owner
-    const latDiff = ownerLat - mechLat;
-    const lngDiff = ownerLng - mechLng;
+      await sendMechanicLocation(mechLat, mechLng);
+      updateMechanicMarker(mechLat, mechLng);
 
-    mechLat += latDiff * STEP;
-    mechLng += lngDiff * STEP;
+    }, 3000);
 
-    // 📡 Send to backend
-    await sendMechanicLocation(mechLat, mechLng);
+    return;
+  }
 
-    // 🧭 Update marker locally (smooth + rotate)
-    updateMechanicMarker(mechLat, mechLng);
+  /* ================= REAL GPS MODE ================= */
+  if (!("geolocation" in navigator)) {
+    alert("GPS not supported on this device");
+    return;
+  }
 
-  }, 3000); // every 3 seconds
+  navigator.geolocation.watchPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      console.log("📡 GPS:", lat, lng);
+
+      await sendMechanicLocation(lat, lng);
+      updateMechanicMarker(lat, lng);
+    },
+    (err) => {
+      console.error("❌ GPS ERROR:", err);
+      alert("Enable GPS / Location permission");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 15000
+    }
+  );
 }
 
 
@@ -385,19 +408,10 @@ let trackingStarted = false;
 fetchJob();
 setInterval(fetchJob, 5000);
 
-if (DEMO_MODE === true) {
-  const waitForDemoReady = setInterval(() => {
-    if (map && ownerMarker && !trackingStarted) {
-      console.log("🟢 DEMO MODE: Starting simulated movement");
-      trackingStarted = true;
-      startLiveTracking();
-      clearInterval(waitForDemoReady);
-    }
-  }, 500);
-} else {
-  if (!trackingStarted) {
-    console.log("📡 REAL MODE: Starting GPS tracking");
+const waitForMap = setInterval(() => {
+  if (map && ownerMarker && !trackingStarted) {
     trackingStarted = true;
     startLiveTracking();
+    clearInterval(waitForMap);
   }
-}
+}, 500);
