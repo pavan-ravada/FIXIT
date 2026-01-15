@@ -89,6 +89,10 @@ function updateMechanicMarker(lat, lng) {
   // ✅ ADD THIS LINE (VERY IMPORTANT)
   map.panTo({ lat, lng });
 
+  if (map.getZoom() < 15) {
+    map.setZoom(15);
+  }
+
   lastMechLat = lat;
   lastMechLng = lng;
 }
@@ -255,6 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
           routeDrawn = true;
         }
       }
+      console.log("Mechanic:", data.mechanicLocation);
 
       /* ---------- BUTTONS ---------- */
       document.getElementById("cancelBtn").style.display =
