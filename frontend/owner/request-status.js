@@ -149,22 +149,31 @@ function smoothMoveMarker(marker, newLat, newLng, duration = 1000) {
 
 /* ================= ROUTE + ETA ================= */
 function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
-  if (!directionsService || !directionsRenderer) return;
+  if (!directionsService || !directionsRenderer || !map) return;
+
+  // 🔥 FORCE attach renderer to map (MOBILE FIX)
+  directionsRenderer.setMap(map);
 
   directionsService.route(
     {
-      origin: { lat: mechLat, lng: mechLng },
-      destination: { lat: ownerLat, lng: ownerLng },
+      origin: new google.maps.LatLng(mechLat, mechLng),
+      destination: new google.maps.LatLng(ownerLat, ownerLng),
       travelMode: google.maps.TravelMode.DRIVING,
+      provideRouteAlternatives: false,
     },
     (result, status) => {
-      if (status !== "OK" || !result.routes.length) return;
+      if (status !== "OK") {
+        console.warn("Directions failed:", status);
+        return;
+      }
 
       directionsRenderer.setDirections(result);
+
       const leg = result.routes[0].legs[0];
 
       document.getElementById("etaText").innerText =
         `⏱ ETA: ${leg.duration.text}`;
+
       document.getElementById("distanceText").innerText =
         `📏 Remaining: ${leg.distance.text}`;
     }
