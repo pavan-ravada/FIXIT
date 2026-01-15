@@ -3,7 +3,7 @@ from firebase import get_db
 
 db = get_db()
 
-RADIUS_STEPS = [3, 5, 8, 12]   # km
+RADIUS_STEPS = [3, 90, 8, 12]   # km
 MAX_EXPANSIONS = 3            # 2 expansions → 15 minutes total
 EXPANSION_INTERVAL = 30
 
