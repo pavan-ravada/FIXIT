@@ -214,14 +214,30 @@ function startLiveTracking() {
   trackingStarted = true;
 
   navigator.geolocation.watchPosition(
-    async pos => {
-      await sendMechanicLocation(
-        pos.coords.latitude,
-        pos.coords.longitude
-      );
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      // 🔥 MOVE MARKER IMMEDIATELY
+      updateMechanicMarker(lat, lng);
+
+      // 🔄 send to backend (do NOT await)
+      sendMechanicLocation(lat, lng);
+
+      // optional route refresh
+      if (ownerLoc) {
+        drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
+      }
     },
-    () => alert("Enable GPS"),
-    { enableHighAccuracy: true }
+    err => {
+      console.error("GPS error", err);
+      alert("Enable GPS permission");
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 1000,
+      timeout: 5000
+    }
   );
 }
 
