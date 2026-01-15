@@ -48,6 +48,13 @@ function initMap(ownerLat, ownerLng) {
     directionsRenderer = new google.maps.DirectionsRenderer({
       map,
       suppressMarkers: true,
+      preserveViewport: false,
+      polylineOptions: {
+        strokeColor: "#1A73E8",
+        strokeOpacity: 0.9,
+        strokeWeight: 6,
+        zIndex: 999
+      }
     });
 
     ownerMarker = new google.maps.Marker({
@@ -64,17 +71,23 @@ function updateMechanicMarker(lat, lng) {
 
   if (!mechanicMarker) {
     mechanicMarker = new google.maps.Marker({
-      position: { lat, lng },
-      map,
-      icon: {
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-        scale: 5,
-        fillColor: "#1A73E8",
-        fillOpacity: 1,
-        strokeWeight: 2,
-      },
-      title: "Mechanic",
-    });
+    position: { lat, lng },
+    map,
+    title: "Mechanic",
+    zIndex: 1000,
+    label: {
+      text: "MECHANIC",
+      color: "#1A73E8",
+      fontWeight: "bold"
+    },
+    icon: {
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 6,
+      fillColor: "#1A73E8",
+      fillOpacity: 1,
+      strokeWeight: 2
+    }
+  });
 
     lastMechLat = lat;
     lastMechLng = lng;
@@ -269,6 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const owner = data.ownerLocation;
 
           updateMechanicMarker(mech.lat, mech.lng);
+
 
           // draw route only once
           if (!routeDrawn) {
