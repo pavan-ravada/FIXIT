@@ -22,6 +22,9 @@ const otpValue = document.getElementById("otpValue");
 const message = document.getElementById("message");
 const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
 
+const MIN_MOVE_METERS = 8;      // ignore GPS noise
+const ROUTE_RECALC_METERS = 60;
+
 /* ================= MAP STATE ================= */
 let map = null;
 let ownerMarker = null;
@@ -87,7 +90,17 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     }
   });
 
-  drawRoute(mechLat, mechLng, ownerLat, ownerLng);
+  if (ownerLoc && lastLat !== null && google.maps.geometry) {
+    const offRouteDistance =
+      google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(lat, lng),
+        new google.maps.LatLng(lastLat, lastLng)
+      );
+
+    if (offRouteDistance > ROUTE_RECALC_METERS) {
+      drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
+    }
+  }
 }
 
 /* ================= ROUTE ================= */
@@ -118,10 +131,20 @@ function updateMechanicMarker(lat, lng) {
   if (!mechanicMarker || !map) return;
 
   if (lastLat !== null && lastLng !== null && google.maps.geometry) {
-    const heading = google.maps.geometry.spherical.computeHeading(
-      { lat: lastLat, lng: lastLng },
-      { lat, lng }
-    );
+    const distance =
+      google.maps.geometry.spherical.computeDistanceBetween(
+        new google.maps.LatLng(lastLat, lastLng),
+        new google.maps.LatLng(lat, lng)
+      );
+
+    // 🚫 Ignore GPS jitter
+    if (distance < MIN_MOVE_METERS) return;
+
+    const heading =
+      google.maps.geometry.spherical.computeHeading(
+        { lat: lastLat, lng: lastLng },
+        { lat, lng }
+      );
 
     mechanicMarker.setIcon({
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
