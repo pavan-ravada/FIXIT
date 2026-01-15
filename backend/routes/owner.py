@@ -15,7 +15,7 @@ db = get_db()
 
 
 # 🔥 RADIUS CONFIG (TEST MODE)
-RADIUS_STEPS = [3, 5, 8, 12]
+RADIUS_STEPS = [3, 90, 8, 12]
 EXPANSION_INTERVAL = 30   # seconds (TEST)
 
 # -----------------------------
