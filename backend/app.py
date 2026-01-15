@@ -13,7 +13,7 @@ CORS(
     app,
     resources={r"/*": {"origins": [
         "http://localhost:5001",
-        "https://dapper-genie-01eb0f.netlify.app"
+        "https://dazzling-tulumba-3c6b1c.netlify.app"
     ]}},
     supports_credentials=True
 )
