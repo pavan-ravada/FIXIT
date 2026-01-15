@@ -43,7 +43,21 @@ let trackingStarted = false;
 
 /* ================= GOOGLE MAPS APP ================= */
 openGoogleMapsBtn?.addEventListener("click", () => {
-  if (!ownerLoc || !mechLoc) return;
+  if (!ownerLoc) {
+    alert("Owner location not ready");
+    return;
+  }
+
+  // fallback: use marker position if mechLoc missing
+  if (!mechLoc && mechanicMarker) {
+    const pos = mechanicMarker.getPosition();
+    mechLoc = { lat: pos.lat(), lng: pos.lng() };
+  }
+
+  if (!mechLoc) {
+    alert("Mechanic location not ready");
+    return;
+  }
 
   const url =
     `https://www.google.com/maps/dir/?api=1` +
@@ -51,7 +65,7 @@ openGoogleMapsBtn?.addEventListener("click", () => {
     `&destination=${ownerLoc.lat},${ownerLoc.lng}` +
     `&travelmode=driving`;
 
-  window.open(url, "_blank");
+  window.location.href = url; // 🔥 use same tab (iOS safe)
 });
 
 /* ================= MAP INIT ================= */
@@ -241,6 +255,7 @@ function startLiveTracking() {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
+      mechLoc = { lat, lng };
       // 🔥 MOVE MARKER IMMEDIATELY
       updateMechanicMarker(lat, lng);
 
