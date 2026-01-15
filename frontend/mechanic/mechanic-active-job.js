@@ -246,6 +246,13 @@ function sendMechanicLocation(lat, lng) {
   return apiPost("/mechanic/update-location", { lat, lng });
 }
 
+function distanceMeters(a, b) {
+  return google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(a.lat, a.lng),
+    new google.maps.LatLng(b.lat, b.lng)
+  );
+}
+
 function startLiveTracking() {
   if (trackingStarted) return;
   trackingStarted = true;
@@ -257,7 +264,12 @@ function startLiveTracking() {
 
       mechLoc = { lat, lng };
       // 🔥 MOVE MARKER IMMEDIATELY
-      updateMechanicMarker(lat, lng);
+      const newLoc = { lat, lng };
+
+      if (!mechLoc || distanceMeters(mechLoc, newLoc) > 5) { // 🔥 5 meters
+        mechLoc = newLoc;
+        updateMechanicMarker(lat, lng);
+      }
 
       // 🔄 send to backend (do NOT await)
       sendMechanicLocation(lat, lng);
