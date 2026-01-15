@@ -408,13 +408,17 @@ def mechanic_history():
 def update_location():
     data = request.get_json()
 
-    request_id = data.get("request_id")
-    phone = data.get("mechanic_phone")
     lat = data.get("lat")
     lng = data.get("lng")
 
-    if not all([request_id, phone, lat, lng]):
-        return {"error": "Missing fields"}, 400
+    if not lat or not lng:
+        return {"error": "Missing location"}, 400
+
+    phone = session.get("mechanic_phone")
+    request_id = session.get("active_request_id")
+
+    if not phone or not request_id:
+        return {"error": "Unauthorized"}, 401
 
     req_ref = db.collection("requests").document(request_id)
     req_doc = req_ref.get()
@@ -424,18 +428,17 @@ def update_location():
 
     req = req_doc.to_dict()
 
-    # 🔒 IMPORTANT: allow tracking in ACCEPTED and IN_PROGRESS
     if req["status"] not in ["ACCEPTED", "IN_PROGRESS"]:
         return {"error": "Tracking not allowed"}, 403
 
     if req.get("mechanic_phone") != phone:
         return {"error": "Unauthorized mechanic"}, 403
 
-    # ✅ UPDATE LOCATION
     req_ref.update({
         "mechanic_location": {
             "lat": lat,
-            "lng": lng
+            "lng": lng,
+            "updated_at": datetime.utcnow().isoformat()
         }
     })
 

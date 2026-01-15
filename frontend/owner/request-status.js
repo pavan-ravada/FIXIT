@@ -14,6 +14,7 @@ let statusInterval = null;
 let isNavigatingAway = false;
 
 let routeDrawn = false;
+let boundsFitted = false;
 
 /* ================= GOOGLE MAP SAFE LOADER ================= */
 function waitForGoogleMaps(cb) {
@@ -87,10 +88,12 @@ function updateMechanicMarker(lat, lng) {
   smoothMoveMarker(mechanicMarker, lat, lng);
 
   // ✅ ADD THIS LINE (VERY IMPORTANT)
-  map.panTo({ lat, lng });
-
-  if (map.getZoom() < 15) {
-    map.setZoom(15);
+  if (!boundsFitted && ownerMarker && mechanicMarker) {
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(ownerMarker.getPosition());
+    bounds.extend(mechanicMarker.getPosition());
+    map.fitBounds(bounds);
+    boundsFitted = true;
   }
 
   lastMechLat = lat;

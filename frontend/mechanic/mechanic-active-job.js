@@ -58,6 +58,7 @@ let directionsService = null;
 let directionsRenderer = null;
 let ownerLoc = null;
 let mechLoc = null;
+let routeDrawn = false;
 
 let mapInitStarted = false;
 let trackingStarted = false;
@@ -222,20 +223,16 @@ async function fetchJob() {
           }
         );
       }
-    }
 
-    if (data.mechanicLocation && map) {
-      updateMechanicMarker(
-        data.mechanicLocation.lat,
-        data.mechanicLocation.lng
-      );
-
-      drawRoute(
-        data.mechanicLocation.lat,
-        data.mechanicLocation.lng,
-        data.ownerLocation.lat,
-        data.ownerLocation.lng
-      );
+      if (!routeDrawn && ownerLoc && mechLoc) {
+        drawRoute(
+          mechLoc.lat,
+          mechLoc.lng,
+          ownerLoc.lat,
+          ownerLoc.lng
+        );
+        routeDrawn = true;
+      }
     }
 
     if (["CANCELLED", "COMPLETED", "TIMEOUT"].includes(data.status)) {
@@ -249,11 +246,11 @@ async function fetchJob() {
 
 /* ================= LIVE TRACKING ================= */
 function sendMechanicLocation(lat, lng) {
+  console.log("📤 Sending GPS:", lat, lng);
+
   return apiPost("/mechanic/update-location", {
-    request_id: requestId,
-    mechanic_phone: mechanic.phone,
     lat,
-    lng,
+    lng
   });
 }
 
@@ -281,17 +278,27 @@ function startLiveTracking() {
 
   navigator.geolocation.watchPosition(
     async pos => {
+      mechLoc = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
+
       await sendMechanicLocation(
         pos.coords.latitude,
         pos.coords.longitude
       );
+
       updateMechanicMarker(
         pos.coords.latitude,
         pos.coords.longitude
       );
     },
     () => alert("Enable GPS / Location permission"),
-    { enableHighAccuracy: true }
+    {
+      enableHighAccuracy: true,
+      maximumAge: 2000,
+      timeout: 5000
+    }
   );
 }
 

@@ -194,8 +194,9 @@ def create_request():
 # -----------------------------
 @owner_bp.route("/request/<request_id>", methods=["GET"])
 def get_request(request_id):
+    # 🔥 FORCE LATEST DATA (NO CACHE)
     req_ref = db.collection("requests").document(request_id)
-    req_doc = req_ref.get()
+    req_doc = req_ref.get(retry=None)
 
     if not req_doc.exists:
         return jsonify({"error": "Request not found"}), 404
@@ -204,7 +205,7 @@ def get_request(request_id):
 
     # 🔁 Auto timeout / radius expansion
     maybe_expand_radius(req_ref, req)
-    req = req_ref.get().to_dict()
+    req = req_ref.get(retry=None).to_dict()
 
     mechanic_data = None
     mechanic_location = None
@@ -223,15 +224,9 @@ def get_request(request_id):
                 "name": mechanic.get("name"),
                 "phone": mechanic.get("phone")
             }
-            mechanic_location = mechanic.get("location")
 
-    print("🔥 GET_REQUEST RESPONSE:", {
-        "search_radius_km": req.get("search_radius_km"),
-        "radius_expanded_count": req.get("radius_expanded_count"),
-        "timeout_at": req.get("timeout_at"),
-        "created_at": req.get("created_at")
-    })
-
+    # ✅ READ MECHANIC LOCATION DIRECTLY FROM REQUEST
+    mechanic_location = req.get("mechanic_location")
 
     return jsonify({
         "request_id": request_id,
@@ -242,12 +237,10 @@ def get_request(request_id):
         "mechanic": mechanic_data,
         "mechanicLocation": mechanic_location,
 
-        # 🔍 RADIUS EXPANSION INFO
+        # 🔍 SEARCH / RADIUS INFO
         "search_radius_km": req.get("search_radius_km"),
         "radius_expanded_count": req.get("radius_expanded_count", 0),
         "timeout_at": req.get("timeout_at"),
-
-        # ⏱ REQUIRED FOR ELAPSED TIME (🔥 MISSING FIX)
         "created_at": req.get("created_at"),
 
         # 🔐 OTP
@@ -260,7 +253,6 @@ def get_request(request_id):
         "canCancel": req.get("status") in ["SEARCHING", "ACCEPTED"],
         "canComplete": req.get("status") == "IN_PROGRESS"
     }), 200
-
 
 
 
