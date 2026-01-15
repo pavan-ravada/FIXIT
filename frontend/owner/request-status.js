@@ -343,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!owner || !requestId) return;
 
       const loc = await apiGet(
-        `/owner/request/location/${requestId}?phone=${owner.phone}`
+        `/request/location/${requestId}?phone=${owner.phone}`
       );
 
       console.log("Mechanic:", loc);
