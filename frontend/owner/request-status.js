@@ -13,11 +13,12 @@ let lastMechLng = null;
 let statusInterval = null;
 let isNavigatingAway = false;
 
-let routeDrawn = false;
 let boundsFitted = false;
 
 const ARRIVAL_RADIUS_METERS = 30;
 let mechanicArrived = false;
+
+let mapsReady = false;
 
 function distanceMeters(a, b) {
   if (!google.maps.geometry) return Infinity;
@@ -56,6 +57,8 @@ function initMap(ownerLat, ownerLng) {
         zIndex: 999
       }
     });
+    mapsReady = true;
+    console.log("✅ MAPS READY");
 
     ownerMarker = new google.maps.Marker({
       position: { lat: ownerLat, lng: ownerLng },
@@ -247,6 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.ownerLocation && !map) {
         initMap(data.ownerLocation.lat, data.ownerLocation.lng);
+        return;
       }
 
       if (data.mechanic) {
@@ -271,50 +275,39 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       /* ---------- MECHANIC MOVEMENT ---------- */
-      if (data.mechanicLocation && data.ownerLocation) {
-        const { lat, lng } = data.mechanicLocation;
+      if (data.mechanicLocation && data.ownerLocation && mapsReady) {
+        const mech = data.mechanicLocation;
+        const owner = data.ownerLocation;
 
-        updateMechanicMarker(lat, lng);
+        // ✅ SHOW MECHANIC
+        updateMechanicMarker(mech.lat, mech.lng);
 
-        // ✅ DRAW ROUTE ONLY ONCE
-        if (data.mechanicLocation && data.ownerLocation) {
-          const mech = data.mechanicLocation;
-          const owner = data.ownerLocation;
+        // ✅ ALWAYS DRAW ROUTE (Google handles redraw efficiently)
+        drawRoute(mech.lat, mech.lng, owner.lat, owner.lng);
 
-          updateMechanicMarker(mech.lat, mech.lng);
+        // ✅ ARRIVAL DETECTION
+        if (!mechanicArrived && google.maps.geometry) {
+          const dist = distanceMeters(mech, owner);
 
+          if (dist <= ARRIVAL_RADIUS_METERS) {
+            mechanicArrived = true;
 
-          // draw route only once
-          if (!routeDrawn) {
-            drawRoute(mech.lat, mech.lng, owner.lat, owner.lng);
-            routeDrawn = true;
-          }
+            document.getElementById("etaText").innerText =
+              "🚗 Mechanic has arrived";
 
-          // 🔥 ARRIVAL DETECTION
-          if (!mechanicArrived) {
-            const dist = distanceMeters(mech, owner);
+            document.getElementById("distanceText").innerText =
+              "📍 Nearby";
 
-            if (dist <= ARRIVAL_RADIUS_METERS) {
-              mechanicArrived = true;
-
-              console.log("✅ Mechanic arrived");
-
-              document.getElementById("etaText").innerText =
-                "🚗 Mechanic has arrived";
-
-              document.getElementById("distanceText").innerText =
-                "📍 Nearby";
-
-              // stop refitting map
-              boundsFitted = true;
-
-              // optional: visually emphasize owner
-              ownerMarker.setAnimation(google.maps.Animation.BOUNCE);
-              setTimeout(() => ownerMarker.setAnimation(null), 3000);
-            }
+            ownerMarker?.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(() => ownerMarker?.setAnimation(null), 3000);
           }
         }
       }
+      
+
+
+
+
       console.log("Mechanic:", data.mechanicLocation);
 
       /* ---------- BUTTONS ---------- */
