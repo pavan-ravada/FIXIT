@@ -40,7 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 600);
 
     } catch (err) {
-      message.textContent = err.message || "Login failed";
+      message.className = "message error";
+      message.textContent = err.message;
     }
   });
 });

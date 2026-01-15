@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = document.getElementById("password").value;
 
     message.textContent = "";
+    message.classList.remove("error", "success");
 
     if (!phone || !password) {
       message.textContent = "Phone and password are required";
@@ -36,7 +37,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       console.error(err);
-      message.textContent = "Login failed";
+
+      message.classList.remove("success");
+      message.classList.add("error");
+      message.textContent = err.message || "Invalid phone or password";
     }
   });
 });

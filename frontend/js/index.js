@@ -5,7 +5,3 @@ function goOwner() {
 function goMechanic() {
     window.location.href = "./mechanic/mechanic-login.html";
 }
-
-function goAdmin() {
-    window.location.href = "./admin/admin-login.html";
-}

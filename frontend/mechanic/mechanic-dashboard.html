@@ -1,53 +1,281 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>FIXIT | Mechanic Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Mechanic Dashboard</title>
 
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/navbar.css">
-    <link rel="stylesheet" href="../css/dashboard.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  min-height:100vh;
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* Background */
+body::before{
+  content:'';
+  position:fixed;
+  inset:-50%;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(251,146,60,.12), transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(59,130,246,.12), transparent 50%);
+  animation:drift 20s ease-in-out infinite;
+  z-index:0;
+}
+@keyframes drift{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(30px,-30px)}
+}
+
+/* NAVBAR */
+.navbar{
+  z-index:10;
+  height:70px;
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(15,23,42,.9);
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.logo{
+  font-size:1.5rem;
+  font-weight:800;
+  background:linear-gradient(135deg,#fff,#fb923c);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.logo::before{content:"🔧 "}
+
+.profile{position:relative}
+#profileIcon{
+  width:44px;height:44px;border-radius:50%;
+  border:2px solid #fb923c;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.dropdown{
+  display:none;
+  position:absolute;
+  right:0;top:56px;
+  background:#1e293b;
+  border-radius:12px;
+  min-width:160px;
+}
+.dropdown.active{display:block}
+.dropdown p{
+  padding:14px 18px;
+  cursor:pointer;
+}
+.dropdown p:hover{
+  background:rgba(251,146,60,.15);
+  color:#fb923c;
+}
+
+/* DASHBOARD */
+.dashboard{
+  z-index:1;
+  max-width:900px;
+  width:100%;
+  margin:0 auto;
+  padding:32px;
+  overflow-y:auto;
+}
+
+h2{
+  text-align:center;
+  font-size:2rem;
+  margin-bottom:28px;
+}
+
+/* AVAILABILITY */
+.availability{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:16px;
+  margin-bottom:28px;
+}
+#statusLabel{
+  font-weight:700;
+  letter-spacing:1px;
+  color:#94a3b8;
+}
+
+/* Switch */
+.switch{position:relative;width:60px;height:32px}
+.switch input{display:none}
+.slider{
+  position:absolute;inset:0;
+  background:#475569;border-radius:999px;
+  transition:.3s;
+}
+.slider::before{
+  content:'';
+  position:absolute;
+  height:26px;width:26px;
+  left:3px;bottom:3px;
+  background:#fff;border-radius:50%;
+  transition:.3s;
+}
+.switch input:checked + .slider{background:#22c55e}
+.switch input:checked + .slider::before{transform:translateX(28px)}
+
+/* REQUESTS */
+h3{margin:24px 0 10px}
+#requestsList{color:#cbd5e1}
+
+/* REQUEST CARD */
+.request-card{
+  background:rgba(30,41,59,.85);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:14px;
+}
+.request-card button{
+  margin-top:10px;
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#fb923c;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* OTP */
+#otpBox{
+  display:none;
+  margin:20px auto;
+  padding:18px;
+  text-align:center;
+  border-radius:16px;
+  background:rgba(251,146,60,.15);
+}
+#otpValue{
+  font-size:32px;
+  font-weight:800;
+  letter-spacing:6px;
+}
+
+/* MESSAGE */
+#message{margin-top:16px;text-align:center}
+
+/* 🔥 HIDE REAL BUTTON (JS USES IT) */
+#availabilityBtn{
+  position:absolute;
+  left:-9999px;
+}
+
+/* ================= ACTIVE JOB CENTER BUTTON ================= */
+.active-job-wrapper {
+  display: none;                 /* shown only when active job */
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#activeJobBtn {
+  padding: 22px 48px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  border-radius: 18px;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(135deg, #fb923c, #f97316);
+  color: #ffffff;
+
+  box-shadow: 0 12px 40px rgba(251,146,60,0.55);
+  transition: all 0.3s ease;
+}
+
+#activeJobBtn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 18px 55px rgba(251,146,60,0.7);
+}
+</style>
 </head>
+
 <body>
 
-<!-- NAVBAR -->
 <div class="navbar">
-    <div class="logo" id="logo">FIXIT</div>
-
-    <div class="profile">
-        <span id="profileIcon">👤</span>
-        <div class="dropdown" id="profileMenu">
-            <p id="configureBtn">Configure</p>
-            <p id="historyBtn">History</p>
-            <p id="logoutBtn">Logout</p>
-        </div>
+  <div class="logo" id="logo">FIXIT</div>
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="configureBtn">Configure</p>
+      <p id="historyBtn">History</p>
+      <p id="logoutBtn">Logout</p>
     </div>
+  </div>
 </div>
 
-<div class="dashboard-container">
-    <h2>Mechanic Dashboard</h2>
+<div class="dashboard">
+  <h2>Mechanic Dashboard</h2>
 
-    <button id="availabilityBtn">Go Online</button>
-    <button id="activeJobBtn" style="display:none;">
-        Go to Active Job
-    </button>
+  <div class="availability">
+    <span id="statusLabel">OFFLINE</span>
+    <label class="switch">
+      <input type="checkbox" id="availabilityToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
 
+  <!-- JS CONTROLS THESE -->
+  <button id="availabilityBtn">Go Online</button>
+    <div class="active-job-wrapper">
+    <button id="activeJobBtn">Go to Active Job</button>
+  </div>
 
-    <!-- 🔐 OTP SECTION (CRITICAL FIX) -->
-    <div id="otpBox" style="display:none; margin-top:20px;">
-        <h3>OTP to Share with Owner</h3>
-        <p id="otpValue"
-           style="font-size:28px; font-weight:bold; letter-spacing:4px;">
-        </p>
-    </div>
+  <div id="otpBox">
+    <h3>OTP to Share</h3>
+    <div id="otpValue"></div>
+  </div>
 
-    <h3>Nearby Requests</h3>
-    <div id="requestsList">
-        <p>No requests yet</p>
-    </div>
+  <h3>Nearby Requests</h3>
+  <div id="requestsList">No nearby requests</div>
 
-    <p id="message" class="message"></p>
+  <p id="message"></p>
 </div>
+
+<script>
+/* PROFILE DROPDOWN */
+profileIcon.onclick=e=>{
+  e.stopPropagation();
+  profileMenu.classList.toggle("active");
+};
+document.onclick=()=>profileMenu.classList.remove("active");
+
+/* 🔥 TOGGLE ↔ BUTTON BRIDGE */
+const toggle=document.getElementById("availabilityToggle");
+const label=document.getElementById("statusLabel");
+const realBtn=document.getElementById("availabilityBtn");
+
+/* Toggle → Button */
+toggle.onchange=()=>{
+  realBtn.click();
+};
+
+/* Button → Toggle (sync from JS updates) */
+const observer=new MutationObserver(()=>{
+  const online=realBtn.textContent.includes("Offline");
+  toggle.checked=online;
+  label.textContent=online?"ONLINE":"OFFLINE";
+  label.style.color=online?"#22c55e":"#94a3b8";
+});
+observer.observe(realBtn,{childList:true,subtree:true});
+</script>
 
 <script type="module" src="./mechanic-dashboard.js"></script>
 </body>

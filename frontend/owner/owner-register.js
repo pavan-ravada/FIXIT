@@ -20,6 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // ✅ STRICT PHONE VALIDATION
+        if (!/^[0-9]{10}$/.test(phone)) {
+            message.className = "message error";
+            message.textContent = "Phone number must be exactly 10 digits";
+            return;
+        }
+
         if (password !== confirmPassword) {
             message.textContent = "Passwords do not match";
             return;
@@ -41,7 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 800);
 
         } catch (err) {
-            message.textContent = err.message || "Registration failed";
+            message.className = "Registration failed";
+            message.textContent = err.message;
         }
     });
 });

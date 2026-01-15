@@ -1,17 +1,10 @@
 import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= CONFIG ================= */
-const DEMO_MODE = false; // 🔥 true for demo, false for real GPS
+const DEMO_MODE = false; // true = demo, false = real GPS
 
 const DEMO_MECH_LAT = 12.9716;
 const DEMO_MECH_LNG = 77.5946;
-
-/* ================= GOOGLE MAPS READY ================= */
-let googleMapsReady = false;
-window.onGoogleMapsReady = function () {
-  console.log("🟢 Google Maps READY");
-  googleMapsReady = true;
-};
 
 /* ================= SESSION GUARD ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
@@ -27,6 +20,24 @@ const ownerInfo = document.getElementById("ownerInfo");
 const otpBox = document.getElementById("otpBox");
 const otpValue = document.getElementById("otpValue");
 const message = document.getElementById("message");
+
+const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
+
+
+openGoogleMapsBtn?.addEventListener("click", () => {
+  if (!ownerLoc || !mechLoc) {
+    alert("Location not ready yet");
+    return;
+  }
+
+  const url =
+    `https://www.google.com/maps/dir/?api=1` +
+    `&origin=${mechLoc.lat},${mechLoc.lng}` +
+    `&destination=${ownerLoc.lat},${ownerLoc.lng}` +
+    `&travelmode=driving`;
+
+  window.open(url, "_blank");
+});
 
 /* ================= NAVBAR ================= */
 document.getElementById("logo")?.addEventListener("click", () => {
@@ -45,21 +56,21 @@ let ownerMarker = null;
 let mechanicMarker = null;
 let directionsService = null;
 let directionsRenderer = null;
+let ownerLoc = null;
+let mechLoc = null;
 
-/* ======= HARD GUARDS (CRITICAL) ======= */
 let mapInitStarted = false;
 let trackingStarted = false;
-let mapRetryCount = 0;
-const MAX_MAP_RETRIES = 20;
+let retryCount = 0;
+const MAX_RETRIES = 20;
 
 /* ================= MAP INIT ================= */
 function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  if (!googleMapsReady) {
-    if (mapRetryCount >= MAX_MAP_RETRIES) {
-      console.error("❌ Google Maps failed to load");
+  if (!(window.google && google.maps)) {
+    if (retryCount++ > MAX_RETRIES) {
+      console.error("Google Maps failed to load");
       return;
     }
-    mapRetryCount++;
     setTimeout(() => initMap(ownerLat, ownerLng, mechLat, mechLng), 300);
     return;
   }
@@ -129,6 +140,7 @@ function updateMechanicMarker(lat, lng) {
       { lat: lastLat, lng: lastLng },
       { lat, lng }
     );
+
     mechanicMarker.setIcon({
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: 5,
@@ -158,11 +170,26 @@ async function fetchJob() {
         `Owner: ${data.owner.name} (${data.owner.phone})`;
     }
 
-    if (data.otp && !data.otp_verified) {
+    // ✅ OTP DISPLAY (FINAL, CORRECT)
+    if (data.status === "ACCEPTED" && data.otp && data.otp_verified === false) {
       otpBox.style.display = "block";
       otpValue.innerText = data.otp;
+      otpBox.scrollIntoView({ behavior: "smooth", block: "center" });
     } else {
       otpBox.style.display = "none";
+    }
+
+    if (data.otp_verified === true) {
+      otpBox.style.display = "none";
+      message.innerText = "OTP verified. Proceed with service.";
+    }
+
+    if (data.ownerLocation) {
+      ownerLoc = data.ownerLocation;
+    }
+
+    if (data.mechanicLocation) {
+      mechLoc = data.mechanicLocation;
     }
 
     if (data.ownerLocation && !mapInitStarted) {
@@ -202,16 +229,13 @@ async function fetchJob() {
         data.mechanicLocation.lat,
         data.mechanicLocation.lng
       );
+
       drawRoute(
         data.mechanicLocation.lat,
         data.mechanicLocation.lng,
         data.ownerLocation.lat,
         data.ownerLocation.lng
       );
-    }
-
-    if (data.status === "IN_PROGRESS") {
-      message.innerText = "OTP verified. Proceed with service.";
     }
 
     if (["CANCELLED", "COMPLETED", "TIMEOUT"].includes(data.status)) {
@@ -252,11 +276,6 @@ function startLiveTracking() {
       updateMechanicMarker(lat, lng);
     }, 3000);
 
-    return;
-  }
-
-  if (!navigator.geolocation) {
-    alert("GPS not supported");
     return;
   }
 

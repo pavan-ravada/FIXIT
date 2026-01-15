@@ -2,8 +2,10 @@ import { apiPost } from "../js/api.js";
 
 console.log("🔥 request-mechanic.js loaded");
 
-// 🔧 DEMO MODE (keep owner close to mechanic at 0,0)
-const DEMO_MODE = false;
+// 🔧 DEMO MODE
+// 👉 Localhost = demo location
+// 👉 Production = real GPS
+const DEMO_MODE = location.hostname === "production";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -25,21 +27,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const owner = JSON.parse(ownerRaw);
 
-    /* ================= NAVBAR ================= */
+  /* ================= NAVBAR ================= */
   const profileIcon = document.getElementById("profileIcon");
   const profileMenu = document.getElementById("profileMenu");
 
-  // FIXIT → Dashboard
   document.getElementById("logo")?.addEventListener("click", () => {
     window.location.href = "./owner-dashboard.html";
   });
 
-  // Toggle profile dropdown
   profileIcon?.addEventListener("click", () => {
     profileMenu.classList.toggle("show");
   });
 
-  // Close dropdown when clicking outside
   document.addEventListener("click", (e) => {
     if (
       !profileIcon.contains(e.target) &&
@@ -49,12 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // History
   document.getElementById("historyBtn")?.addEventListener("click", () => {
     window.location.href = "./owner-history.html";
   });
 
-  // Logout
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     try {
       await apiPost("/owner/logout", { phone: owner.phone });
@@ -66,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.location.replace("../index.html");
   });
-
 
   /* ======================================================
      ELEMENTS
@@ -121,13 +117,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ======================================================
-     📍 GET CURRENT LOCATION (DEV MODE)
+     📍 GET CURRENT LOCATION
      ====================================================== */
   getLocationBtn.addEventListener("click", () => {
 
-    // 🔧 DEMO MODE → force owner near mechanic (0,0)
-    if (DEMO_MODE === true) {
-      console.warn("DEMO MODE ACTIVE");
+    if (DEMO_MODE) {
+      console.warn("⚠️ DEMO MODE ACTIVE (localhost)");
       const demoLat = 12.9916;
       const demoLng = 77.6146;
 
@@ -135,12 +130,10 @@ document.addEventListener("DOMContentLoaded", () => {
       lngInput.value = demoLng;
 
       loadMap(demoLat, demoLng);
-
-      alert("Using DEMO owner location (within 3km)");
+      alert("Using DEMO owner location (local testing)");
       return;
     }
 
-    // 🌍 REAL GPS (production)
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -167,50 +160,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
-
   /* ======================================================
      🚑 SUBMIT REQUEST
      ====================================================== */
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // 🔧 FORCE DEMO LOCATION (ABSOLUTE FIX)
-
     const payload = {
       owner_phone: owner.phone,
       vehicle_type: vehicleTypeInput.value,
       service_type: serviceTypeInput.value,
       description: descriptionInput.value,
-
       lat: parseFloat(latInput.value),
       lng: parseFloat(lngInput.value),
     };
 
-console.log("🚨 REQUEST LOCATION SENT:", payload.lat, payload.lng);
-
-
     console.log("🚨 REQUEST LOCATION:", payload.lat, payload.lng);
-
 
     if (!payload.vehicle_type || !payload.service_type) {
       alert("Please select vehicle and service type");
       return;
     }
 
-    if (payload.lat === "" || payload.lng === "" || isNaN(payload.lat) || isNaN(payload.lng)) {
+    if (isNaN(payload.lat) || isNaN(payload.lng)) {
       alert("Please get your location first");
       return;
     }
 
     try {
       const res = await apiPost("/owner/request/create", payload);
-
-      // 🔒 ONLY activeRequestId is set here
       localStorage.setItem("activeRequestId", res.request_id);
-
       window.location.replace("./request-status.html");
-
     } catch (err) {
       alert(err.message || "Failed to create request");
     }

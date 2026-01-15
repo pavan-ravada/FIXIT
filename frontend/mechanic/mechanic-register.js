@@ -23,6 +23,13 @@ document.getElementById("registerBtn").onclick = async () => {
         return;
     }
 
+    // ✅ STRICT PHONE VALIDATION
+    if (!/^[0-9]{10}$/.test(phone)) {
+        message.className = "message error";
+        message.textContent = "Phone number must be exactly 10 digits";
+        return;
+    }
+
     if (vehicleTypes.length === 0 || serviceTypes.length === 0) {
         message.textContent = "Select at least one vehicle and service type";
         return;

@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from "../js/api.js";
 
-/* ================= STATE ================= */
+/* ================= MAP STATE ================= */
 let map = null;
 let ownerMarker = null;
 let mechanicMarker = null;
@@ -43,7 +43,7 @@ function initMap(ownerLat, ownerLng) {
   });
 }
 
-/* ================= MECHANIC MARKER ================= */
+/* ================= SMOOTH + ROTATED MECHANIC ================= */
 function updateMechanicMarker(lat, lng) {
   if (!map) return;
 
@@ -51,7 +51,13 @@ function updateMechanicMarker(lat, lng) {
     mechanicMarker = new google.maps.Marker({
       position: { lat, lng },
       map,
-      icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: "#1A73E8",
+        fillOpacity: 1,
+        strokeWeight: 2,
+      },
       title: "Mechanic",
     });
 
@@ -60,13 +66,28 @@ function updateMechanicMarker(lat, lng) {
     return;
   }
 
-  smoothMoveMarker(mechanicMarker, lat, lng);
+  if (google.maps.geometry && lastMechLat !== null) {
+    const heading = google.maps.geometry.spherical.computeHeading(
+      { lat: lastMechLat, lng: lastMechLng },
+      { lat, lng }
+    );
 
+    mechanicMarker.setIcon({
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 5,
+      rotation: heading,
+      fillColor: "#1A73E8",
+      fillOpacity: 1,
+      strokeWeight: 2,
+    });
+  }
+
+  smoothMoveMarker(mechanicMarker, lat, lng);
   lastMechLat = lat;
   lastMechLng = lng;
 }
 
-/* ================= SMOOTH MOVEMENT ================= */
+/* ================= SMOOTH MOVE ================= */
 function smoothMoveMarker(marker, newLat, newLng, duration = 1000) {
   const start = marker.getPosition();
   const startLat = start.lat();
@@ -75,12 +96,10 @@ function smoothMoveMarker(marker, newLat, newLng, duration = 1000) {
 
   function animate(now) {
     const progress = Math.min((now - startTime) / duration, 1);
-
     const lat = startLat + (newLat - startLat) * progress;
     const lng = startLng + (newLng - startLng) * progress;
 
     marker.setPosition({ lat, lng });
-
     if (progress < 1) requestAnimationFrame(animate);
   }
 
@@ -101,19 +120,17 @@ function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
       if (status !== "OK" || !result.routes.length) return;
 
       directionsRenderer.setDirections(result);
-
       const leg = result.routes[0].legs[0];
 
       document.getElementById("etaText").innerText =
         `⏱ ETA: ${leg.duration.text}`;
-
       document.getElementById("distanceText").innerText =
         `📏 Remaining: ${leg.distance.text}`;
     }
   );
 }
 
-/* ================= RADIUS TIMER ================= */
+/* ================= RADIUS TIMER (SEARCHING ONLY) ================= */
 function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
   const radiusEl = document.getElementById("radiusText");
   const timerEl = document.getElementById("timerText");
@@ -144,10 +161,43 @@ function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
 
 /* ================= MAIN ================= */
 document.addEventListener("DOMContentLoaded", () => {
+  /* ================= NAVBAR ================= */
+  const logo = document.getElementById("logo");
+  const profileIcon = document.getElementById("profileIcon");
+  const profileMenu = document.getElementById("profileMenu");
+  const historyBtn = document.getElementById("historyBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  logo?.addEventListener("click", () => {
+    // ✅ CORRECT OWNER DASHBOARD
+    window.location.href = "./owner-dashboard.html";
+  });
+
+  profileIcon?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle("active");
+  });
+
+  document.addEventListener("click", () => {
+    profileMenu.classList.remove("active");
+  });
+
+  historyBtn?.addEventListener("click", () => {
+    window.location.href = "./owner-history.html";
+  });
+
+  logoutBtn?.addEventListener("click", () => {
+    // ✅ CLEAR OWNER SESSION
+    localStorage.removeItem("owner");
+    localStorage.removeItem("activeRequestId");
+    localStorage.removeItem("completedRequestId");
+
+    window.location.href = "./owner-login.html";
+  });
   const ownerRaw = localStorage.getItem("owner");
   const requestId = localStorage.getItem("activeRequestId");
-
   if (!ownerRaw || !requestId) return;
+
   const owner = JSON.parse(ownerRaw);
 
   async function fetchStatus() {
@@ -155,10 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const data = await apiGet(`/owner/request/${requestId}`);
-
       document.getElementById("statusText").innerText = data.status;
 
-      if (data.ownerLocation) {
+      if (data.ownerLocation && !map) {
         initMap(data.ownerLocation.lat, data.ownerLocation.lng);
       }
 
@@ -167,74 +216,89 @@ document.addEventListener("DOMContentLoaded", () => {
           `Mechanic: ${data.mechanic.name} (${data.mechanic.phone})`;
       }
 
-      if (data.mechanicLocation && data.ownerLocation) {
-        const lat = data.mechanicLocation.lat;
-        const lng = data.mechanicLocation.lng;
-
-        updateMechanicMarker(lat, lng);
-
-        if (
-          lastMechLat === null ||
-          Math.abs(lat - lastMechLat) > 0.00001 ||
-          Math.abs(lng - lastMechLng) > 0.00001
-        ) {
-          drawRoute(
-            lat,
-            lng,
-            data.ownerLocation.lat,
-            data.ownerLocation.lng
-          );
-        }
-      }
-
+      /* ---------- SEARCHING RADIUS ---------- */
       const radiusBox = document.querySelector(".radius-box");
-      if (radiusBox) {
-        radiusBox.style.display =
-          data.status === "SEARCHING" ? "block" : "none";
-      }
 
       if (data.status === "SEARCHING") {
+        if (radiusBox) radiusBox.style.display = "block";
+
         updateRadiusUI(
           data.search_radius_km,
           data.timeout_at,
           data.created_at
         );
-      } else if (window.radiusInterval) {
-        clearInterval(window.radiusInterval);
+      } else {
+        if (radiusBox) radiusBox.style.display = "none";
+        if (window.radiusInterval) clearInterval(window.radiusInterval);
       }
 
-      const otpSection = document.getElementById("otpSection");
-      const cancelBtn = document.getElementById("cancelBtn");
-      const completeBtn = document.getElementById("completeBtn");
+      /* ---------- MECHANIC MOVEMENT ---------- */
+      if (data.mechanicLocation && data.ownerLocation) {
+        const { lat, lng } = data.mechanicLocation;
 
-      otpSection.style.display = "none";
-      cancelBtn.style.display = "none";
-      completeBtn.style.display = "none";
-
-      if (data.status === "SEARCHING") cancelBtn.style.display = "block";
-      if (data.status === "ACCEPTED") {
-        otpSection.style.display = "block";
-        cancelBtn.style.display = "block";
+        updateMechanicMarker(lat, lng);
+        drawRoute(
+          lat,
+          lng,
+          data.ownerLocation.lat,
+          data.ownerLocation.lng
+        );
       }
-      if (data.status === "IN_PROGRESS") completeBtn.style.display = "block";
+
+      /* ---------- BUTTONS ---------- */
+      document.getElementById("cancelBtn").style.display =
+        data.status === "SEARCHING" || data.status === "ACCEPTED"
+          ? "block"
+          : "none";
+
+      document.getElementById("completeBtn").style.display =
+        data.status === "IN_PROGRESS" ? "block" : "none";
+
+      document.getElementById("otpSection").style.display =
+        data.status === "ACCEPTED" ? "block" : "none";
 
     } catch (err) {
       console.error("Status fetch failed:", err);
     }
   }
 
+  /* ================= OTP ================= */
   document.getElementById("verifyOtpBtn")?.addEventListener("click", async () => {
     const otp = document.getElementById("otpInput").value.trim();
-    if (!otp) return alert("Enter OTP");
+    const messageEl = document.getElementById("message");
 
-    await apiPost(`/owner/verify-otp/${requestId}`, {
-      phone: owner.phone,
-      otp,
-    });
+    messageEl.textContent = "";
+    messageEl.style.background = "none";
+    messageEl.style.color = "";
 
-    fetchStatus();
+    if (!otp) {
+      messageEl.textContent = "Please enter OTP";
+      messageEl.style.background = "rgba(239,68,68,0.15)";
+      messageEl.style.color = "#fca5a5";
+      return;
+    }
+
+    try {
+      await apiPost(`/owner/verify-otp/${requestId}`, {
+        phone: owner.phone,
+        otp,
+      });
+
+      messageEl.textContent = "OTP verified successfully";
+      messageEl.style.background = "rgba(34,197,94,0.2)";
+      messageEl.style.color = "#4ade80";
+
+      fetchStatus();
+
+    } catch (err) {
+      // 🔥 THIS IS THE IMPORTANT PART
+      messageEl.textContent = err.message || "Invalid OTP";
+      messageEl.style.background = "rgba(239,68,68,0.15)";
+      messageEl.style.color = "#fca5a5";
+    }
   });
 
+  /* ================= CANCEL ================= */
   document.getElementById("cancelBtn")?.addEventListener("click", async () => {
     isNavigatingAway = true;
     clearInterval(statusInterval);
@@ -247,6 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.replace("./owner-dashboard.html");
   });
 
+  /* ================= COMPLETE ================= */
   document.getElementById("completeBtn")?.addEventListener("click", async () => {
     isNavigatingAway = true;
     clearInterval(statusInterval);

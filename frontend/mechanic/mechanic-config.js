@@ -30,21 +30,12 @@ document.getElementById("logoutBtn").onclick = async () => {
 /* ---------------- SAVE CONFIG ---------------- */
 document.getElementById("saveBtn").onclick = async () => {
     const vehicleTypes = Array.from(
-        document.querySelectorAll('input[type="checkbox"][value][value]:checked')
-    )
-        .filter(cb =>
-            ["BIKE", "CAR", "AUTO", "BUS", "LORRY"].includes(cb.value)
-        )
-        .map(cb => cb.value);
+        document.querySelectorAll('#vehicleTypes .option-btn.active')
+    ).map(btn => btn.dataset.value);
 
     const serviceTypes = Array.from(
-        document.querySelectorAll('input[type="checkbox"][value]:checked')
-    )
-        .filter(cb =>
-            ["PUNCTURE", "BATTERY", "ENGINE", "TRANSMISSION", "LIGHTS", "BRAKE"]
-                .includes(cb.value)
-        )
-        .map(cb => cb.value);
+        document.querySelectorAll('#serviceTypes .option-btn.active')
+    ).map(btn => btn.dataset.value);
 
     const message = document.getElementById("message");
     message.textContent = "";

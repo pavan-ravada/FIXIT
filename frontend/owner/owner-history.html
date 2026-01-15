@@ -1,36 +1,216 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIXIT | Owner History</title>
 
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Base Styles -->
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/navbar.css">
     <link rel="stylesheet" href="../css/dashboard.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(251,146,60,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(59,130,246,0.1) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes drift {
+            0%,100% { transform: translate(0,0); }
+            50% { transform: translate(30px,-30px); }
+        }
+
+        /* Navbar */
+        .navbar {
+            z-index: 10;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15,23,42,0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #fb923c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .logo::before {
+            content: "🔧 ";
+        }
+
+        .profile {
+            position: relative;
+        }
+
+        #profileIcon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #fb923c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: rgba(251,146,60,0.1);
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 60px;
+            background: rgba(30,41,59,0.95);
+            border-radius: 12px;
+            min-width: 150px;
+            overflow: hidden;
+        }
+
+        .dropdown.active {
+            display: block;
+        }
+
+        .dropdown p {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #cbd5e1;
+        }
+
+        .dropdown p:hover {
+            background: rgba(251,146,60,0.15);
+            color: #fb923c;
+        }
+
+        /* Dashboard */
+        .dashboard-container {
+            z-index: 1;
+            flex: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #ffffff 0%, #fb923c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* History Card */
+        .history-card {
+            background: linear-gradient(135deg, rgba(30,41,59,0.85), rgba(51,65,85,0.85));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+        }
+
+        .history-card p {
+            color: #cbd5e1;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .history-card strong {
+            color: #ffffff;
+        }
+
+        .empty {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-    <!-- NAVBAR -->
-    <div class="navbar">
-        <div class="logo" id="logo">FIXIT</div>
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo" id="logo">FIXIT</div>
 
-        <div class="profile">
-            <span id="profileIcon">👤</span>
-            <div class="dropdown" id="profileMenu">
-                <p id="dashboardBtn">Dashboard</p>
-                <p id="logoutBtn">Logout</p>
-            </div>
+    <h2 style="margin:0;font-size:1.4rem;">Service History</h2>
+
+    <div class="profile">
+        <span id="profileIcon">👤</span>
+        <div class="dropdown" id="profileMenu">
+            <p id="dashboardBtn">Dashboard</p>
+            <p id="logoutBtn">Logout</p>
         </div>
     </div>
+</div>
 
-    <!-- CONTENT -->
-    <div class="dashboard-container">
-        <h2>Your Service History</h2>
-        <div id="historyList">Loading...</div>
-    </div>
+<!-- CONTENT -->
+<div class="dashboard-container">
+    <div id="historyList" class="empty">Loading your history...</div>
+</div>
 
-    <!-- ✅ MUST BE MODULE -->
-    <script type="module" src="./owner-history.js"></script>
+<!-- UI JS -->
+<script>
+    document.getElementById("logo").onclick = () => {
+        window.location.href = "../user/dashboard.html";
+    };
+
+    document.getElementById("profileIcon").onclick = (e) => {
+        e.stopPropagation();
+        document.getElementById("profileMenu").classList.toggle("active");
+    };
+
+    document.addEventListener("click", () => {
+        document.getElementById("profileMenu").classList.remove("active");
+    });
+</script>
+
+<!-- MODULE -->
+<script type="module" src="./owner-history.js"></script>
 
 </body>
 </html>
