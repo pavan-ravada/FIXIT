@@ -13,6 +13,8 @@ let lastMechLng = null;
 let statusInterval = null;
 let isNavigatingAway = false;
 
+let routeDrawn = false;
+
 /* ================= GOOGLE MAP SAFE LOADER ================= */
 function waitForGoogleMaps(cb) {
   if (window.google && google.maps) cb();
@@ -83,6 +85,10 @@ function updateMechanicMarker(lat, lng) {
   }
 
   smoothMoveMarker(mechanicMarker, lat, lng);
+
+  // ✅ ADD THIS LINE (VERY IMPORTANT)
+  map.panTo({ lat, lng });
+
   lastMechLat = lat;
   lastMechLng = lng;
 }
@@ -237,12 +243,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const { lat, lng } = data.mechanicLocation;
 
         updateMechanicMarker(lat, lng);
-        drawRoute(
-          lat,
-          lng,
-          data.ownerLocation.lat,
-          data.ownerLocation.lng
-        );
+
+        // ✅ DRAW ROUTE ONLY ONCE
+        if (!routeDrawn) {
+          drawRoute(
+            lat,
+            lng,
+            data.ownerLocation.lat,
+            data.ownerLocation.lng
+          );
+          routeDrawn = true;
+        }
       }
 
       /* ---------- BUTTONS ---------- */
@@ -326,5 +337,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   fetchStatus();
-  statusInterval = setInterval(fetchStatus, 5000);
+  statusInterval = setInterval(fetchStatus, 3000);
 });
