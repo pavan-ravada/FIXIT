@@ -6,6 +6,8 @@ const DEMO_MODE = false; // true = demo, false = real GPS
 const DEMO_MECH_LAT = 12.9716;
 const DEMO_MECH_LNG = 77.5946;
 
+const ROUTE_RECALC_THRESHOLD_METERS = 60;
+
 /* ================= SESSION GUARD ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
 const requestId = localStorage.getItem("activeRequestId");
@@ -20,10 +22,25 @@ const ownerInfo = document.getElementById("ownerInfo");
 const otpBox = document.getElementById("otpBox");
 const otpValue = document.getElementById("otpValue");
 const message = document.getElementById("message");
-
 const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
 
+/* ================= MAP STATE ================= */
+let map = null;
+let ownerMarker = null;
+let mechanicMarker = null;
+let directionsService = null;
+let directionsRenderer = null;
 
+let ownerLoc = null;
+let mechLoc = null;
+
+let lastLat = null;
+let lastLng = null;
+
+let mapInitStarted = false;
+let trackingStarted = false;
+
+/* ================= GOOGLE MAPS APP ================= */
 openGoogleMapsBtn?.addEventListener("click", () => {
   if (!ownerLoc || !mechLoc) {
     alert("Location not ready yet");
@@ -39,67 +56,44 @@ openGoogleMapsBtn?.addEventListener("click", () => {
   window.open(url, "_blank");
 });
 
-/* ================= NAVBAR ================= */
-document.getElementById("logo")?.addEventListener("click", () => {
-  window.location.href = "./mechanic-dashboard.html";
-});
-document.getElementById("historyBtn")?.addEventListener("click", () => {
-  window.location.href = "./mechanic-history.html";
-});
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-  alert("You cannot logout during an active job");
-});
-
-/* ================= MAP STATE ================= */
-let map = null;
-let ownerMarker = null;
-let mechanicMarker = null;
-let directionsService = null;
-let directionsRenderer = null;
-let ownerLoc = null;
-let mechLoc = null;
-let routeDrawn = false;
-
-let mapInitStarted = false;
-let trackingStarted = false;
-let retryCount = 0;
-const MAX_RETRIES = 20;
-
 /* ================= MAP INIT ================= */
 function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  if (!(window.google && google.maps)) {
-    if (retryCount++ > MAX_RETRIES) {
-      console.error("Google Maps failed to load");
-      return;
-    }
-    setTimeout(() => initMap(ownerLat, ownerLng, mechLat, mechLng), 300);
-    return;
-  }
-
+  if (!window.google || !google.maps) return;
   if (map) return;
 
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: ownerLat, lng: ownerLng },
-    zoom: 14,
+    center: { lat: mechLat, lng: mechLng },
+    zoom: 16,
+    mapTypeId: "roadmap",
+    disableDefaultUI: true,
+    heading: 0,
+    tilt: 0
   });
 
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
     suppressMarkers: true,
+    preserveViewport: true
   });
 
   ownerMarker = new google.maps.Marker({
     position: { lat: ownerLat, lng: ownerLng },
     map,
-    title: "Owner",
+    title: "Owner"
   });
 
   mechanicMarker = new google.maps.Marker({
     position: { lat: mechLat, lng: mechLng },
     map,
-    icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
     title: "You",
+    icon: {
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 6,
+      fillColor: "#1A73E8",
+      fillOpacity: 1,
+      strokeWeight: 2
+    }
   });
 
   drawRoute(mechLat, mechLng, ownerLat, ownerLng);
@@ -113,14 +107,14 @@ function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
     {
       origin: { lat: mechLat, lng: mechLng },
       destination: { lat: ownerLat, lng: ownerLng },
-      travelMode: google.maps.TravelMode.DRIVING,
+      travelMode: google.maps.TravelMode.DRIVING
     },
     (result, status) => {
-      if (status !== "OK" || !result.routes.length) return;
+      if (status !== "OK") return;
 
       directionsRenderer.setDirections(result);
-      const leg = result.routes[0].legs[0];
 
+      const leg = result.routes[0].legs[0];
       document.getElementById("routeDistance").innerText =
         `Distance: ${leg.distance.text}`;
       document.getElementById("routeDuration").innerText =
@@ -129,12 +123,9 @@ function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
   );
 }
 
-/* ================= MARKER UPDATE ================= */
-let lastLat = null;
-let lastLng = null;
-
+/* ================= MARKER UPDATE (NAVIGATION FEEL) ================= */
 function updateMechanicMarker(lat, lng) {
-  if (!mechanicMarker) return;
+  if (!mechanicMarker || !map) return;
 
   if (lastLat !== null && lastLng !== null && google.maps.geometry) {
     const heading = google.maps.geometry.spherical.computeHeading(
@@ -144,15 +135,20 @@ function updateMechanicMarker(lat, lng) {
 
     mechanicMarker.setIcon({
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      scale: 5,
+      scale: 6,
       rotation: heading,
       fillColor: "#1A73E8",
       fillOpacity: 1,
-      strokeWeight: 2,
+      strokeWeight: 2
     });
+
+    map.setHeading(heading);
   }
 
   mechanicMarker.setPosition({ lat, lng });
+  map.panTo({ lat, lng });
+  map.setZoom(16);
+
   lastLat = lat;
   lastLng = lng;
 }
@@ -171,67 +167,30 @@ async function fetchJob() {
         `Owner: ${data.owner.name} (${data.owner.phone})`;
     }
 
-    // ✅ OTP DISPLAY (FINAL, CORRECT)
-    if (data.status === "ACCEPTED" && data.otp && data.otp_verified === false) {
+    if (data.status === "ACCEPTED" && data.otp && !data.otp_verified) {
       otpBox.style.display = "block";
       otpValue.innerText = data.otp;
-      otpBox.scrollIntoView({ behavior: "smooth", block: "center" });
     } else {
       otpBox.style.display = "none";
     }
 
-    if (data.otp_verified === true) {
-      otpBox.style.display = "none";
-      message.innerText = "OTP verified. Proceed with service.";
-    }
+    if (data.ownerLocation) ownerLoc = data.ownerLocation;
+    if (data.mechanicLocation) mechLoc = data.mechanicLocation;
 
-    if (data.ownerLocation) {
-      ownerLoc = data.ownerLocation;
-    }
-
-    if (data.mechanicLocation) {
-      mechLoc = data.mechanicLocation;
-    }
-
-    if (data.ownerLocation && !mapInitStarted) {
+    if (ownerLoc && !mapInitStarted) {
       mapInitStarted = true;
 
       if (DEMO_MODE) {
-        initMap(
-          data.ownerLocation.lat,
-          data.ownerLocation.lng,
-          DEMO_MECH_LAT,
-          DEMO_MECH_LNG
-        );
+        initMap(ownerLoc.lat, ownerLoc.lng, DEMO_MECH_LAT, DEMO_MECH_LNG);
       } else {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            initMap(
-              data.ownerLocation.lat,
-              data.ownerLocation.lng,
-              pos.coords.latitude,
-              pos.coords.longitude
-            );
-          },
-          () => {
-            initMap(
-              data.ownerLocation.lat,
-              data.ownerLocation.lng,
-              data.ownerLocation.lat,
-              data.ownerLocation.lng
-            );
-          }
-        );
-      }
-
-      if (!routeDrawn && ownerLoc && mechLoc) {
-        drawRoute(
-          mechLoc.lat,
-          mechLoc.lng,
-          ownerLoc.lat,
-          ownerLoc.lng
-        );
-        routeDrawn = true;
+        navigator.geolocation.getCurrentPosition(pos => {
+          initMap(
+            ownerLoc.lat,
+            ownerLoc.lng,
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
+        });
       }
     }
 
@@ -246,12 +205,7 @@ async function fetchJob() {
 
 /* ================= LIVE TRACKING ================= */
 function sendMechanicLocation(lat, lng) {
-  console.log("📤 Sending GPS:", lat, lng);
-
-  return apiPost("/mechanic/update-location", {
-    lat,
-    lng
-  });
+  return apiPost("/mechanic/update-location", { lat, lng });
 }
 
 function startLiveTracking() {
@@ -263,16 +217,14 @@ function startLiveTracking() {
     let lng = DEMO_MECH_LNG;
 
     setInterval(async () => {
-      if (!ownerMarker) return;
-
       const o = ownerMarker.getPosition();
       lat += (o.lat() - lat) * 0.0003;
       lng += (o.lng() - lng) * 0.0003;
 
       await sendMechanicLocation(lat, lng);
       updateMechanicMarker(lat, lng);
+      drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
     }, 3000);
-
     return;
   }
 
@@ -283,17 +235,14 @@ function startLiveTracking() {
         lng: pos.coords.longitude
       };
 
-      await sendMechanicLocation(
-        pos.coords.latitude,
-        pos.coords.longitude
-      );
+      await sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+      updateMechanicMarker(mechLoc.lat, mechLoc.lng);
 
-      updateMechanicMarker(
-        pos.coords.latitude,
-        pos.coords.longitude
-      );
+      if (ownerLoc) {
+        drawRoute(mechLoc.lat, mechLoc.lng, ownerLoc.lat, ownerLoc.lng);
+      }
     },
-    () => alert("Enable GPS / Location permission"),
+    () => alert("Enable GPS permission"),
     {
       enableHighAccuracy: true,
       maximumAge: 2000,
@@ -303,7 +252,7 @@ function startLiveTracking() {
 }
 
 /* ================= CLEANUP ================= */
-function cleanupAndExit(toHistory = false) {
+function cleanupAndExit(toHistory) {
   localStorage.removeItem("activeRequestId");
   localStorage.removeItem("activeOtp");
   window.location.replace(
