@@ -16,6 +16,18 @@ let isNavigatingAway = false;
 let routeDrawn = false;
 let boundsFitted = false;
 
+const ARRIVAL_RADIUS_METERS = 30;
+let mechanicArrived = false;
+
+function distanceMeters(a, b) {
+  if (!google.maps.geometry) return Infinity;
+
+  return google.maps.geometry.spherical.computeDistanceBetween(
+    new google.maps.LatLng(a.lat, a.lng),
+    new google.maps.LatLng(b.lat, b.lng)
+  );
+}
+
 /* ================= GOOGLE MAP SAFE LOADER ================= */
 function waitForGoogleMaps(cb) {
   if (window.google && google.maps) cb();
@@ -252,14 +264,41 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMechanicMarker(lat, lng);
 
         // ✅ DRAW ROUTE ONLY ONCE
-        if (!routeDrawn) {
-          drawRoute(
-            lat,
-            lng,
-            data.ownerLocation.lat,
-            data.ownerLocation.lng
-          );
-          routeDrawn = true;
+        if (data.mechanicLocation && data.ownerLocation) {
+          const mech = data.mechanicLocation;
+          const owner = data.ownerLocation;
+
+          updateMechanicMarker(mech.lat, mech.lng);
+
+          // draw route only once
+          if (!routeDrawn) {
+            drawRoute(mech.lat, mech.lng, owner.lat, owner.lng);
+            routeDrawn = true;
+          }
+
+          // 🔥 ARRIVAL DETECTION
+          if (!mechanicArrived) {
+            const dist = distanceMeters(mech, owner);
+
+            if (dist <= ARRIVAL_RADIUS_METERS) {
+              mechanicArrived = true;
+
+              console.log("✅ Mechanic arrived");
+
+              document.getElementById("etaText").innerText =
+                "🚗 Mechanic has arrived";
+
+              document.getElementById("distanceText").innerText =
+                "📍 Nearby";
+
+              // stop refitting map
+              boundsFitted = true;
+
+              // optional: visually emphasize owner
+              ownerMarker.setAnimation(google.maps.Animation.BOUNCE);
+              setTimeout(() => ownerMarker.setAnimation(null), 3000);
+            }
+          }
         }
       }
       console.log("Mechanic:", data.mechanicLocation);
