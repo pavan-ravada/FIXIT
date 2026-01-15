@@ -336,6 +336,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function fetchMechanicLocation() {
+    try {
+      const owner = JSON.parse(localStorage.getItem("owner"));
+      const requestId = localStorage.getItem("activeRequestId");
+      if (!owner || !requestId) return;
+
+      const loc = await apiGet(
+        `/owner/request/location/${requestId}?phone=${owner.phone}`
+      );
+
+      console.log("Mechanic:", loc);
+
+      updateMechanicMarker(loc.lat, loc.lng);
+
+      if (!routeDrawn && ownerMarker) {
+        const ownerPos = ownerMarker.getPosition();
+        drawRoute(
+          loc.lat,
+          loc.lng,
+          ownerPos.lat(),
+          ownerPos.lng()
+        );
+        routeDrawn = true;
+      }
+
+    } catch (err) {
+      // VERY IMPORTANT: ignore 404 while searching
+      // console.log("Mechanic location not ready");
+    }
+  }
+
+  setInterval(fetchMechanicLocation, 3000);
+
   /* ================= OTP ================= */
   document.getElementById("verifyOtpBtn")?.addEventListener("click", async () => {
     const otp = document.getElementById("otpInput").value.trim();
