@@ -15,7 +15,7 @@ CORS(
     app,
     origins=[
         "http://localhost:5001",
-        "http://chimerical-dasik-6feae3.netlify.app/"
+        "https://dazzling-tulumba-3c6b1c.netlify.app"
     ],
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
