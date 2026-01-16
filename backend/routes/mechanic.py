@@ -427,16 +427,20 @@ def update_location():
     if req.get("mechanic_phone") != phone:
         return jsonify({"error": "Unauthorized mechanic"}), 403
 
-    if req.get("status") not in ["ACCEPTED", "IN_PROGRESS"]:
+    # 🔒 IMPORTANT: DO NOT ALLOW LOCATION BEFORE OTP
+    if not req.get("otp_verified"):
+        return jsonify({"error": "OTP not verified yet"}), 403
+
+    if req.get("status") not in ["IN_PROGRESS"]:
         return jsonify({"error": "Tracking not allowed"}), 403
 
+    # ✅ ONLY UPDATE LOCATION — NOTHING ELSE
     req_ref.update({
         "mechanic_location": {
             "lat": lat,
             "lng": lng,
             "updated_at": datetime.utcnow().isoformat()
-        },
-        "status": "IN_PROGRESS"
+        }
     })
 
     return jsonify({"message": "Location updated"}), 200
