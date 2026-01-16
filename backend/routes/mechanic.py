@@ -424,17 +424,15 @@ def update_location():
 
     req = req_doc.to_dict()
 
+    # 🔐 Only assigned mechanic can update location
     if req.get("mechanic_phone") != phone:
         return jsonify({"error": "Unauthorized mechanic"}), 403
 
-    # 🔒 IMPORTANT: DO NOT ALLOW LOCATION BEFORE OTP
-    if not req.get("otp_verified"):
-        return jsonify({"error": "OTP not verified yet"}), 403
-
-    if req.get("status") not in ["IN_PROGRESS"]:
+    # ✅ TRACKING ALLOWED BEFORE & AFTER OTP
+    if req.get("status") not in ["ACCEPTED", "IN_PROGRESS"]:
         return jsonify({"error": "Tracking not allowed"}), 403
 
-    # ✅ ONLY UPDATE LOCATION — NOTHING ELSE
+    # ✅ UPDATE ONLY LOCATION (NO STATUS CHANGE)
     req_ref.update({
         "mechanic_location": {
             "lat": lat,
