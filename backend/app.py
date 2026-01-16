@@ -11,15 +11,12 @@ app = Flask(__name__)
 # Allow frontend on 5001
 from flask_cors import CORS
 
+from flask_cors import CORS
+
 CORS(
     app,
-    origins=[
-        "http://localhost:5001",
-        "https://dazzling-tulumba-3c6b1c.netlify.app"
-    ],
-    supports_credentials=True,
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True
 )
 
 
