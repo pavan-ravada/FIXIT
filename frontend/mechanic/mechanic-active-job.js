@@ -82,19 +82,24 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true
+    suppressMarkers: true,
+    preserveViewport: true
   });
 
   ownerMarker = new google.maps.Marker({
     position: { lat: ownerLat, lng: ownerLng },
     map,
-    title: "Owner"
+    title: "Owner",
+    icon: {
+      url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
+    }
   });
 
   mechanicMarker = new google.maps.Marker({
     position: { lat: mechLat, lng: mechLng },
     map,
     title: "You",
+    zIndex: 999,
     icon: {
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: 6,
@@ -104,16 +109,9 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     }
   });
 
-  if (ownerLoc && lastLat !== null && google.maps.geometry) {
-    const offRouteDistance =
-      google.maps.geometry.spherical.computeDistanceBetween(
-        new google.maps.LatLng(lat, lng),
-        new google.maps.LatLng(lastLat, lastLng)
-      );
-
-    if (offRouteDistance > ROUTE_RECALC_METERS) {
-      drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
-    }
+  // ✅ DRAW INITIAL ROUTE ONCE
+  if (ownerLat && ownerLng && mechLat && mechLng) {
+    drawRoute(mechLat, mechLng, ownerLat, ownerLng);
   }
 }
 
@@ -243,7 +241,12 @@ async function fetchJob() {
 
 /* ================= LIVE GPS ================= */
 function sendMechanicLocation(lat, lng) {
-  return apiPost("/mechanic/update-location", { lat, lng });
+  return apiPost("/mechanic/update-location", {
+    request_id: requestId,
+    phone: mechanic.phone,
+    lat,
+    lng
+  });
 }
 
 function distanceMeters(a, b) {
@@ -262,19 +265,15 @@ function startLiveTracking() {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      mechLoc = { lat, lng };
-      // 🔥 MOVE MARKER IMMEDIATELY
       const newLoc = { lat, lng };
 
-      if (!mechLoc || distanceMeters(mechLoc, newLoc) > 5) { // 🔥 5 meters
+      if (!mechLoc || distanceMeters(mechLoc, newLoc) > 5) {
         mechLoc = newLoc;
+
         updateMechanicMarker(lat, lng);
+        sendMechanicLocation(lat, lng); // 🔥 SEND ONLY WHEN MOVED
       }
 
-      // 🔄 send to backend (do NOT await)
-      sendMechanicLocation(lat, lng);
-
-      // optional route refresh
       if (ownerLoc) {
         drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
       }
@@ -289,6 +288,8 @@ function startLiveTracking() {
       timeout: 5000
     }
   );
+
+
 }
 
 /* ================= CLEANUP ================= */
