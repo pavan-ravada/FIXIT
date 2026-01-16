@@ -446,35 +446,43 @@ def update_location():
 
 
 #LOGOUT
-@mechanic_bp.route("/logout", methods=["POST"])
-def mechanic_logout():
+@mechanic_bp.route("/update-location", methods=["POST"])
+def update_location():
     data = request.get_json()
+
+    request_id = data.get("request_id")
     phone = data.get("phone")
+    lat = data.get("lat")
+    lng = data.get("lng")
 
-    if not phone:
-        return jsonify({"error": "Phone required"}), 400
+    if not request_id or not phone or lat is None or lng is None:
+        return jsonify({"error": "Missing fields"}), 400
 
-    docs = db.collection("mechanics").where("phone", "==", phone).limit(1).get()
-    if not docs:
-        return jsonify({"error": "Mechanic not found"}), 404
+    req_ref = db.collection("requests").document(request_id)
+    req_doc = req_ref.get()
 
-    mechanic_doc = docs[0]
-    mechanic = mechanic_doc.to_dict()
+    if not req_doc.exists:
+        return jsonify({"error": "Request not found"}), 404
 
-    # ❌ Block logout if active job exists
-    if mechanic.get("active_request_id"):
-        return jsonify({
-            "error": "Cannot logout during active job"
-        }), 409
+    req = req_doc.to_dict()
 
-    # Make mechanic unavailable
-    mechanic_doc.reference.update({
-        "is_available": False
+    if req.get("mechanic_phone") != phone:
+        return jsonify({"error": "Unauthorized mechanic"}), 403
+
+    if req.get("status") not in ["ACCEPTED", "IN_PROGRESS"]:
+        return jsonify({"error": "Tracking not allowed"}), 403
+
+    # ✅ UPDATE LOCATION
+    req_ref.update({
+        "mechanic_location": {
+            "lat": lat,
+            "lng": lng,
+            "updated_at": datetime.utcnow().isoformat()
+        },
+        "status": "IN_PROGRESS"
     })
 
-    return jsonify({
-        "message": "Mechanic logged out successfully"
-    }), 200
+    return jsonify({"message": "Location updated"}), 200
 
 
 @mechanic_bp.route("/configure", methods=["POST"])
