@@ -18,6 +18,8 @@ const ownerInfo = document.getElementById("ownerInfo");
 const otpBox = document.getElementById("otpBox");
 const otpValue = document.getElementById("otpValue");
 const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
+const historyBtn = document.getElementById("historyBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 /* ================= MAP STATE ================= */
 let map, ownerMarker, mechanicMarker;
@@ -244,3 +246,15 @@ const wait = setInterval(() => {
     clearInterval(wait);
   }
 }, 500);
+
+/* ================= NAVBAR FIX ================= */
+
+// ❌ BLOCK HISTORY DURING ACTIVE JOB
+historyBtn?.addEventListener("click", () => {
+  alert("You cannot view history while a job is active.");
+});
+
+// ❌ BLOCK LOGOUT DURING ACTIVE JOB
+logoutBtn?.addEventListener("click", () => {
+  alert("You cannot logout while a job is active.");
+});
