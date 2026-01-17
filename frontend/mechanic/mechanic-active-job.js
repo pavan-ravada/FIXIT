@@ -4,6 +4,13 @@ import { apiGet, apiPost } from "../js/api.js";
 const MIN_MOVE_METERS = 5;
 const ROUTE_RECALC_METERS = 60;
 
+const DEMO_MODE = false;
+
+const MOCK_MECH_LOCATION = {
+  lat: 12.9716,   // Bengaluru
+  lng: 77.5946
+};
+
 /* ================= SESSION ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
 const requestId = localStorage.getItem("activeRequestId");
@@ -22,8 +29,11 @@ const historyBtn = document.getElementById("historyBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
 /* ================= MAP STATE ================= */
-let map, ownerMarker, mechanicMarker;
-let directionsService, directionsRenderer;
+let map = null;
+let ownerMarker = null;
+let mechanicMarker = null;
+let directionsService = null;
+let directionsRenderer = null;
 
 let ownerLoc = null;
 let mechLoc = null;
@@ -33,7 +43,7 @@ let mapInitStarted = false;
 let trackingStarted = false;
 let routeDrawn = false;
 
-/* ================= GOOGLE MAPS ================= */
+/* ================= OPEN IN GOOGLE MAPS ================= */
 openGoogleMapsBtn?.addEventListener("click", () => {
   if (!ownerLoc || !mechLoc) return;
 
@@ -86,6 +96,8 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
 
 /* ================= ROUTE ================= */
 function drawRoute(mlat, mlng, olat, olng) {
+  if (!directionsService || !directionsRenderer) return;
+
   directionsService.route(
     {
       origin: { lat: mlat, lng: mlng },
@@ -108,6 +120,7 @@ function drawRoute(mlat, mlng, olat, olng) {
 
 /* ================= MARKER UPDATE ================= */
 function updateMechanicMarker(lat, lng) {
+  if (!map || !mechanicMarker) return;
   mechanicMarker.setPosition({ lat, lng });
   map.panTo({ lat, lng });
 }
@@ -118,24 +131,21 @@ async function fetchJob() {
     `/mechanic/request/${requestId}?phone=${mechanic.phone}`
   );
 
-   /* 🔥🔥🔥 ADD THIS BLOCK 🔥🔥🔥 */
+  /* 🔴 JOB FINISHED STATES */
   if (data.status === "COMPLETED") {
-    console.log("✅ Job completed. Redirecting mechanic to dashboard");
-
     localStorage.removeItem("activeRequestId");
     localStorage.removeItem("activeOtp");
-
     window.location.replace("./mechanic-dashboard.html");
     return;
   }
 
   if (data.status === "CANCELLED" || data.status === "TIMEOUT") {
-    alert("Job ended");
     localStorage.removeItem("activeRequestId");
+    localStorage.removeItem("activeOtp");
+    alert("Job ended");
     window.location.replace("./mechanic-dashboard.html");
     return;
   }
-  /* 🔥🔥🔥 END FIX 🔥🔥🔥 */
 
   statusText.innerText = data.status;
 
@@ -152,24 +162,56 @@ async function fetchJob() {
   }
 
   ownerLoc = data.ownerLocation || ownerLoc;
-  mechLoc = data.mechanicLocation || mechLoc;
 
+  /* ✅ MAP INIT USING BROWSER GPS (NOT FIRESTORE) */
   if (ownerLoc && !mapInitStarted) {
     mapInitStarted = true;
-    navigator.geolocation.getCurrentPosition(pos => {
+
+    if (DEMO_MODE) {
+      // 🧪 DEMO LOCATION (NO GPS)
+      mechLoc = { ...MOCK_MECH_LOCATION };
+
       initMap(
         ownerLoc.lat,
         ownerLoc.lng,
-        pos.coords.latitude,
-        pos.coords.longitude
+        mechLoc.lat,
+        mechLoc.lng
       );
-    });
+
+      // Send initial demo location to backend
+      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+
+    } else {
+      // 📍 REAL GPS MODE
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          mechLoc = { lat, lng };
+
+          initMap(
+            ownerLoc.lat,
+            ownerLoc.lng,
+            lat,
+            lng
+          );
+        },
+        err => {
+          console.error("GPS error", err);
+          alert("Enable GPS to continue");
+        },
+        { enableHighAccuracy: true }
+      );
+    }
   }
 
+  /* 🔁 UPDATE FROM FIRESTORE IF AVAILABLE */
   if (data.mechanicLocation && map) {
+    mechLoc = data.mechanicLocation;
     updateMechanicMarker(
-      data.mechanicLocation.lat,
-      data.mechanicLocation.lng
+      mechLoc.lat,
+      mechLoc.lng
     );
   }
 }
@@ -188,52 +230,39 @@ function startLiveTracking() {
   if (trackingStarted) return;
   trackingStarted = true;
 
+  if (DEMO_MODE) {
+    // 🔁 Simulate movement every 3 seconds
+    setInterval(() => {
+      mechLoc.lat += 0.00005;
+      mechLoc.lng += 0.00005;
+
+      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+      updateMechanicMarker(mechLoc.lat, mechLoc.lng);
+
+      if (routeDrawn && ownerLoc) {
+        drawRoute(mechLoc.lat, mechLoc.lng, ownerLoc.lat, ownerLoc.lng);
+      }
+    }, 3000);
+
+    return;
+  }
+
+  // 🔴 REAL GPS MODE
   navigator.geolocation.watchPosition(
     pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      // ✅ FIRST LOCATION ALWAYS SEND
-      if (!lastSentLoc) {
-        lastSentLoc = { lat, lng };
-        mechLoc = lastSentLoc;
-        sendMechanicLocation(lat, lng);
-        updateMechanicMarker(lat, lng);
-        return;
-      }
+      sendMechanicLocation(lat, lng);
+      updateMechanicMarker(lat, lng);
 
-      const dist = google.maps.geometry.spherical.computeDistanceBetween(
-        new google.maps.LatLng(lastSentLoc.lat, lastSentLoc.lng),
-        new google.maps.LatLng(lat, lng)
-      );
-
-      if (dist >= MIN_MOVE_METERS) {
-        lastSentLoc = { lat, lng };
-        mechLoc = lastSentLoc;
-
-        sendMechanicLocation(lat, lng);
-        updateMechanicMarker(lat, lng);
-
-        if (routeDrawn && ownerLoc && dist > ROUTE_RECALC_METERS) {
-          drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
-        }
+      if (routeDrawn && ownerLoc) {
+        drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
       }
     },
     () => alert("Enable GPS"),
     { enableHighAccuracy: true }
   );
-}
-
-function cleanupAndExit() {
-  // 🔥 CLEAR EVERYTHING RELATED TO ACTIVE JOB
-  localStorage.removeItem("activeRequestId");
-  localStorage.removeItem("activeOtp");
-
-  // 🔥 STOP GPS
-  trackingStarted = false;
-
-  // 🔥 HARD REDIRECT (NO HISTORY)
-  window.location.replace("./mechanic-dashboard.html");
 }
 
 /* ================= INIT ================= */
@@ -247,17 +276,11 @@ const wait = setInterval(() => {
   }
 }, 500);
 
-/* ================= NAVBAR NAVIGATION ================= */
-
-// ✅ HISTORY → ALLOW NAVIGATION
+/* ================= NAVBAR ================= */
 historyBtn?.addEventListener("click", () => {
   window.location.href = "./mechanic-history.html";
 });
 
-// ✅ LOGOUT → CALL API THEN REDIRECT
 logoutBtn?.addEventListener("click", () => {
-  // ❌ DO NOT CALL LOGOUT API DURING ACTIVE JOB
-  // ✅ JUST NAVIGATE BACK TO DASHBOARD
-
   alert("Finish or cancel the active job before logging out.");
 });

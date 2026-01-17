@@ -424,31 +424,45 @@ def owner_history():
     return jsonify({"history": history}), 200
 
 
-@owner_bp.route("/request/location/<request_id>", methods=["GET"])
+from flask import request, jsonify
+
+@owner_bp.route("/request/location/<request_id>", methods=["GET", "OPTIONS"])
 def get_mechanic_location(request_id):
+
+    # ✅ HANDLE PREFLIGHT
+    if request.method == "OPTIONS":
+        return "", 200
+
     phone = request.args.get("phone")
+
+    # ✅ PHONE NOT SENT → SAFE RESPONSE
     if not phone:
-        return jsonify({"error": "Phone required"}), 400
+        return jsonify({"mechanic": None}), 200
 
-    ref = db.collection("requests").document(request_id)
-    doc = ref.get()
+    req_ref = db.collection("requests").document(request_id)
+    req_doc = req_ref.get()
 
-    if not doc.exists:
-        return jsonify({"error": "Request not found"}), 404
+    if not req_doc.exists:
+        return jsonify({"mechanic": None}), 200
 
-    req = doc.to_dict()
+    req = req_doc.to_dict()
 
+    # 🔒 OWNER AUTH
     if req.get("owner_phone") != phone:
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"mechanic": None}), 200
 
-    if req.get("status") not in ["ACCEPTED", "IN_PROGRESS"]:
-        return jsonify({"error": "Tracking not allowed"}), 400
+    # ✅ ALLOW TRACKING STATES
+    if req.get("status") not in ["SEARCHING", "ACCEPTED", "IN_PROGRESS"]:
+        return jsonify({"mechanic": None}), 200
 
-    loc = req.get("mechanic_location")
-    if not loc:
-        return jsonify({"error": "Location not available"}), 404
+    mechanic_location = req.get("mechanic_location")
 
-    return jsonify(loc), 200
+    # ✅ MECHANIC NOT MOVED YET
+    if not mechanic_location:
+        return jsonify({"mechanic": None}), 200
+
+    # ✅ LOCATION AVAILABLE
+    return jsonify(mechanic_location), 200
 
 
 # -----------------------------

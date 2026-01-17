@@ -20,6 +20,8 @@ let mechanicArrived = false;
 
 let mapsReady = false;
 
+let finalTimeoutReached = false;
+
 function distanceMeters(a, b) {
   if (!google.maps.geometry) return Infinity;
 
@@ -189,23 +191,44 @@ function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
   const createdMs = new Date(createdAt).getTime();
   const timeoutMs = new Date(timeoutAt).getTime();
 
+  const steps = [3, 5, 8, 12];
+  const lastRadius = steps[steps.length - 1];
+  const currentIndex = steps.indexOf(radiusKm);
+  const isLastRadius = radiusKm === lastRadius;
+
   if (window.radiusInterval) clearInterval(window.radiusInterval);
 
   window.radiusInterval = setInterval(() => {
     const now = Date.now();
 
-    const elapsed = Math.max(0, Math.floor((now - createdMs) / 1000));
-    const remaining = Math.max(0, Math.floor((timeoutMs - now) / 1000));
+    const elapsedSec = Math.max(0, Math.floor((now - createdMs) / 1000));
+    const remainingSec = Math.max(0, Math.floor((timeoutMs - now) / 1000));
 
-    const min = String(Math.floor(elapsed / 60)).padStart(2, "0");
-    const sec = String(elapsed % 60).padStart(2, "0");
+    const min = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+    const sec = String(elapsedSec % 60).padStart(2, "0");
 
-    const steps = [3, 5, 8, 12];
-    const nextRadius = steps[steps.indexOf(radiusKm) + 1] ?? "—";
-
+    // 🔍 SEARCHING TEXT
     radiusEl.innerText = `🔍 Searching within ${radiusKm} km`;
-    timerEl.innerText =
-      `⏱ Elapsed: ${min}:${sec} | ➡️ Next: ${nextRadius} km in ${remaining}s`;
+
+    // 🔥 FINAL TIMEOUT UI (ONLY AFTER LAST RADIUS EXPIRES)
+    if (isLastRadius && remainingSec === 0) {
+      timerEl.innerText = "❌ No mechanic found · Request timed out";
+
+      // Stop radius timer — backend will send TIMEOUT status next
+      clearInterval(window.radiusInterval);
+      return;
+    }
+
+    // 🔁 NORMAL EXPANSION UI
+    if (!isLastRadius) {
+      const nextRadius = steps[currentIndex + 1];
+      timerEl.innerText =
+        `⏱ Elapsed: ${min}:${sec} | ➡️ Next: ${nextRadius} km in ${remainingSec}s`;
+    } else {
+      // ⏳ LAST RADIUS COUNTDOWN (NOT TIMEOUT YET)
+      timerEl.innerText =
+        `⏱ Elapsed: ${min}:${sec} | ⌛ Timeout in ${remainingSec}s`;
+    }
   }, 1000);
 }
 
@@ -254,20 +277,56 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isNavigatingAway) return;
 
     try {
-      const data = await apiGet(`/owner/request/${requestId}`);
-      document.getElementById("statusText").innerText = data.status;
+      const data = await apiGet(
+        `/owner/request/${requestId}?phone=${owner.phone}`
+      );
 
+      /* ================= STATUS TEXT ================= */
+      const statusTextEl = document.getElementById("statusText");
+      if (statusTextEl) {
+        statusTextEl.innerText = data.status || "UNKNOWN";
+      }
+
+      /* ================= FINAL TIMEOUT LOCK ================= */
+      if (data.status === "TIMEOUT") {
+        finalTimeoutReached = true;
+
+        // Status
+        if (statusTextEl) statusTextEl.innerText = "TIMEOUT";
+
+        // Radius UI
+        const radiusText = document.getElementById("radiusText");
+        const timerText = document.getElementById("timerText");
+        if (radiusText) radiusText.innerText = "❌ No mechanic found";
+        if (timerText) timerText.innerText = "Request timed out";
+
+        // Buttons
+        const cancelBtn = document.getElementById("cancelBtn");
+        if (cancelBtn) cancelBtn.style.display = "none";
+
+        const completeBtn = document.getElementById("completeBtn");
+        if (completeBtn) completeBtn.style.display = "none";
+
+        const otpSection = document.getElementById("otpSection");
+        if (otpSection) otpSection.style.display = "none";
+
+        // Stop timers
+        if (window.radiusInterval) clearInterval(window.radiusInterval);
+        clearInterval(statusInterval);
+
+        isNavigatingAway = true;
+        return; // ⛔ HARD STOP — NOTHING AFTER THIS
+      }
+
+      // If timeout already happened earlier, never touch UI again
+      if (finalTimeoutReached) return;
+
+      /* ================= INIT MAP ================= */
       if (data.ownerLocation && !map) {
         initMap(data.ownerLocation.lat, data.ownerLocation.lng);
-        return;
       }
 
-      if (data.mechanic) {
-        document.getElementById("mechanicInfo").innerText =
-          `Mechanic: ${data.mechanic.name} (${data.mechanic.phone})`;
-      }
-
-      /* ---------- SEARCHING RADIUS ---------- */
+      /* ================= SEARCHING ================= */
       const radiusBox = document.querySelector(".radius-box");
 
       if (data.status === "SEARCHING") {
@@ -278,96 +337,83 @@ document.addEventListener("DOMContentLoaded", () => {
           data.timeout_at,
           data.created_at
         );
+
+        // Buttons
+        const cancelBtn = document.getElementById("cancelBtn");
+        if (cancelBtn) cancelBtn.style.display = "block";
+
+        const completeBtn = document.getElementById("completeBtn");
+        if (completeBtn) completeBtn.style.display = "none";
+
+        const otpSection = document.getElementById("otpSection");
+        if (otpSection) otpSection.style.display = "none";
+
+        return; // 🔴 DO NOT TRACK MECHANIC
       } else {
         if (radiusBox) radiusBox.style.display = "none";
         if (window.radiusInterval) clearInterval(window.radiusInterval);
       }
 
-      /* ---------- MECHANIC MOVEMENT ---------- */
-      if (data.mechanicLocation && data.ownerLocation && mapsReady) {
+      /* ================= ACCEPTED / IN_PROGRESS ================= */
+      if (
+        (data.status === "ACCEPTED" || data.status === "IN_PROGRESS") &&
+        data.mechanicLocation &&
+        typeof data.mechanicLocation.lat === "number" &&
+        typeof data.mechanicLocation.lng === "number" &&
+        data.ownerLocation &&
+        mapsReady
+      ) {
         const mech = data.mechanicLocation;
-        const owner = data.ownerLocation;
+        const own = data.ownerLocation;
 
-        // ✅ SHOW MECHANIC
         updateMechanicMarker(mech.lat, mech.lng);
+        drawRoute(mech.lat, mech.lng, own.lat, own.lng);
 
-        // ✅ ALWAYS DRAW ROUTE (Google handles redraw efficiently)
-        drawRoute(mech.lat, mech.lng, owner.lat, owner.lng);
-
-        // ✅ ARRIVAL DETECTION
+        // ARRIVAL DETECTION
         if (!mechanicArrived && google.maps.geometry) {
-          const dist = distanceMeters(mech, owner);
-
+          const dist = distanceMeters(mech, own);
           if (dist <= ARRIVAL_RADIUS_METERS) {
             mechanicArrived = true;
 
-            document.getElementById("etaText").innerText =
-              "🚗 Mechanic has arrived";
-
-            document.getElementById("distanceText").innerText =
-              "📍 Nearby";
-
-            ownerMarker?.setAnimation(google.maps.Animation.BOUNCE);
-            setTimeout(() => ownerMarker?.setAnimation(null), 3000);
+            const etaText = document.getElementById("etaText");
+            const distanceText = document.getElementById("distanceText");
+            if (etaText) etaText.innerText = "🚗 Mechanic has arrived";
+            if (distanceText) distanceText.innerText = "📍 Nearby";
           }
         }
       }
-      
 
+      /* ================= BUTTONS ================= */
+      const cancelBtn = document.getElementById("cancelBtn");
+      const completeBtn = document.getElementById("completeBtn");
+      const otpSection = document.getElementById("otpSection");
 
+      if (cancelBtn) {
+        cancelBtn.style.display =
+          data.status === "SEARCHING" || data.status === "ACCEPTED"
+            ? "block"
+            : "none";
+      }
 
+      if (completeBtn) {
+        completeBtn.style.display =
+          data.status === "IN_PROGRESS" ? "block" : "none";
+      }
 
-      console.log("Mechanic:", data.mechanicLocation);
-
-      /* ---------- BUTTONS ---------- */
-      document.getElementById("cancelBtn").style.display =
-        data.status === "SEARCHING" || data.status === "ACCEPTED"
-          ? "block"
-          : "none";
-
-      document.getElementById("completeBtn").style.display =
-        data.status === "IN_PROGRESS" ? "block" : "none";
-
-      document.getElementById("otpSection").style.display =
-        data.status === "ACCEPTED" ? "block" : "none";
+      if (otpSection) {
+        otpSection.style.display =
+          data.status === "ACCEPTED" ? "block" : "none";
+      }
 
     } catch (err) {
       console.error("Status fetch failed:", err);
     }
   }
 
-  async function fetchMechanicLocation() {
-    try {
-      const owner = JSON.parse(localStorage.getItem("owner"));
-      const requestId = localStorage.getItem("activeRequestId");
-      if (!owner || !requestId) return;
 
-      const loc = await apiGet(
-        `/request/location/${requestId}?phone=${owner.phone}`
-      );
 
-      console.log("Mechanic:", loc);
 
-      updateMechanicMarker(loc.lat, loc.lng);
 
-      if (!routeDrawn && ownerMarker) {
-        const ownerPos = ownerMarker.getPosition();
-        drawRoute(
-          loc.lat,
-          loc.lng,
-          ownerPos.lat(),
-          ownerPos.lng()
-        );
-        routeDrawn = true;
-      }
-
-    } catch (err) {
-      // VERY IMPORTANT: ignore 404 while searching
-      // console.log("Mechanic location not ready");
-    }
-  }
-
-  setInterval(fetchMechanicLocation, 3000);
 
   /* ================= OTP ================= */
   document.getElementById("verifyOtpBtn")?.addEventListener("click", async () => {
