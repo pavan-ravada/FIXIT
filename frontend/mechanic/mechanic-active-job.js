@@ -116,6 +116,25 @@ async function fetchJob() {
     `/mechanic/request/${requestId}?phone=${mechanic.phone}`
   );
 
+   /* 🔥🔥🔥 ADD THIS BLOCK 🔥🔥🔥 */
+  if (data.status === "COMPLETED") {
+    console.log("✅ Job completed. Redirecting mechanic to dashboard");
+
+    localStorage.removeItem("activeRequestId");
+    localStorage.removeItem("activeOtp");
+
+    window.location.replace("./mechanic-dashboard.html");
+    return;
+  }
+
+  if (data.status === "CANCELLED" || data.status === "TIMEOUT") {
+    alert("Job ended");
+    localStorage.removeItem("activeRequestId");
+    window.location.replace("./mechanic-dashboard.html");
+    return;
+  }
+  /* 🔥🔥🔥 END FIX 🔥🔥🔥 */
+
   statusText.innerText = data.status;
 
   if (data.owner) {
@@ -201,6 +220,18 @@ function startLiveTracking() {
     () => alert("Enable GPS"),
     { enableHighAccuracy: true }
   );
+}
+
+function cleanupAndExit() {
+  // 🔥 CLEAR EVERYTHING RELATED TO ACTIVE JOB
+  localStorage.removeItem("activeRequestId");
+  localStorage.removeItem("activeOtp");
+
+  // 🔥 STOP GPS
+  trackingStarted = false;
+
+  // 🔥 HARD REDIRECT (NO HISTORY)
+  window.location.replace("./mechanic-dashboard.html");
 }
 
 /* ================= INIT ================= */

@@ -305,33 +305,43 @@ def complete_job(request_id):
 
     req = req_doc.to_dict()
 
+    # ✅ STATUS GUARD
     if req.get("status") != "IN_PROGRESS":
         return {"error": "Job can only be completed after OTP verification"}, 403
 
+    # ✅ OWNER AUTH
     if req.get("owner_phone") != phone:
         return {"error": "Unauthorized owner"}, 403
 
-    # ✅ COMPLETE JOB
+    # ===============================
+    # ✅ COMPLETE JOB (AUTHORITATIVE)
+    # ===============================
     req_ref.update({
         "status": "COMPLETED",
-        "completed_at": datetime.utcnow()
+        "completed_at": datetime.utcnow(),
+        "job_closed": True   # 🔥 ADD THIS (important but safe)
     })
 
-    # ✅ RELEASE MECHANIC
-    if req.get("mechanic_phone"):
+    # ===============================
+    # ✅ RELEASE MECHANIC COMPLETELY
+    # ===============================
+    mechanic_phone = req.get("mechanic_phone")
+    if mechanic_phone:
         mech_docs = (
             db.collection("mechanics")
-            .where("phone", "==", req["mechanic_phone"])
+            .where("phone", "==", mechanic_phone)
             .limit(1)
             .get()
         )
         if mech_docs:
             mech_docs[0].reference.update({
-                "is_available": True,
-                "active_request_id": None
+                "active_request_id": None,
+                "is_available": True
             })
 
+    # ===============================
     # ✅ CLEAR OWNER ACTIVE REQUEST
+    # ===============================
     owner_docs = (
         db.collection("owners")
         .where("phone", "==", phone)
