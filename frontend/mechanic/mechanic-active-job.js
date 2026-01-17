@@ -247,14 +247,28 @@ const wait = setInterval(() => {
   }
 }, 500);
 
-/* ================= NAVBAR FIX ================= */
+/* ================= NAVBAR NAVIGATION ================= */
 
-// ❌ BLOCK HISTORY DURING ACTIVE JOB
+// ✅ HISTORY → ALLOW NAVIGATION
 historyBtn?.addEventListener("click", () => {
-  alert("You cannot view history while a job is active.");
+  window.location.href = "./mechanic-history.html";
 });
 
-// ❌ BLOCK LOGOUT DURING ACTIVE JOB
-logoutBtn?.addEventListener("click", () => {
-  alert("You cannot logout while a job is active.");
+// ✅ LOGOUT → CALL API THEN REDIRECT
+logoutBtn?.addEventListener("click", async () => {
+  try {
+    await apiPost("/mechanic/logout", {
+      phone: mechanic.phone
+    });
+
+    // clear local storage
+    localStorage.removeItem("mechanic");
+    localStorage.removeItem("activeRequestId");
+    localStorage.removeItem("activeOtp");
+
+    window.location.replace("./mechanic-login.html");
+  } catch (err) {
+    console.error("Logout failed", err);
+    alert("Unable to logout. Try again.");
+  }
 });
