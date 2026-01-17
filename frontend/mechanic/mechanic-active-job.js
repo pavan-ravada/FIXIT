@@ -260,5 +260,4 @@ logoutBtn?.addEventListener("click", () => {
   // ✅ JUST NAVIGATE BACK TO DASHBOARD
 
   alert("Finish or cancel the active job before logging out.");
-  window.location.href = "./mechanic-dashboard.html";
 });
