@@ -255,20 +255,10 @@ historyBtn?.addEventListener("click", () => {
 });
 
 // ✅ LOGOUT → CALL API THEN REDIRECT
-logoutBtn?.addEventListener("click", async () => {
-  try {
-    await apiPost("/mechanic/logout", {
-      phone: mechanic.phone
-    });
+logoutBtn?.addEventListener("click", () => {
+  // ❌ DO NOT CALL LOGOUT API DURING ACTIVE JOB
+  // ✅ JUST NAVIGATE BACK TO DASHBOARD
 
-    // clear local storage
-    localStorage.removeItem("mechanic");
-    localStorage.removeItem("activeRequestId");
-    localStorage.removeItem("activeOtp");
-
-    window.location.replace("./mechanic-login.html");
-  } catch (err) {
-    console.error("Logout failed", err);
-    alert("Unable to logout. Try again.");
-  }
+  alert("Finish or cancel the active job before logging out.");
+  window.location.href = "./mechanic-dashboard.html";
 });
