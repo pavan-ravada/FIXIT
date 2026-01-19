@@ -1,8 +1,15 @@
-from google.cloud import firestore
 import os
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KEY_PATH = os.path.join(BASE_DIR, "firebase_key.json")
+import json
+from google.cloud import firestore
+from google.oauth2 import service_account
 
 def get_db():
-    return firestore.Client.from_service_account_json(KEY_PATH)
+    firebase_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
+
+    if not firebase_json:
+        raise RuntimeError("FIREBASE_SERVICE_ACCOUNT env variable not set")
+
+    creds_dict = json.loads(firebase_json)
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+
+    return firestore.Client(credentials=credentials, project=creds_dict["project_id"])
