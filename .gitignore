@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Python cache
 __pycache__/
 *.pyc
@@ -24,3 +25,18 @@ firebase_key.json
 .DS_Store
 
 .env
+=======
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets
+backend/firebase_key.json
+
+# Netlify-only (remove for public deploy)
+frontend/_redirects
+frontend/404.html
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<<<<<<< HEAD
  <head>
   <meta charset="UTF-8"><!-- ✅ REQUIRED FOR MOBILE GPS + MAPS -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -397,4 +398,319 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&amp;libraries=places,geometry" async defer>
 </script><!-- ✅ YOUR LOGIC (MODULE, LOAD AFTER MAPS) -->
   <script type="module" src="./request-mechanic.js"></script>
+=======
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Request Mechanic</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont;
+  background:#ffffff;
+  color:#111111;
+  min-height:100vh;
+}
+
+/* NAVBAR */
+.navbar{
+  padding:20px 32px;
+  border-bottom:1px solid #e5e7eb;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* PROFILE */
+.profile{position:relative}
+#profileIcon{
+  width:40px;height:40px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+
+.dropdown{
+  position:absolute;
+  right:0;top:48px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  min-width:160px;
+  display:none;
+}
+.dropdown.active{display:block}
+.dropdown p{
+  padding:12px 16px;
+  cursor:pointer;
+}
+.dropdown p+p{border-top:1px solid #e5e7eb}
+.dropdown p:hover{background:#f9fafb}
+
+/* CONTAINER */
+.form-container{
+  max-width:720px;
+  margin:32px auto;
+  padding:32px 16px;
+}
+
+h2{
+  font-size:1.9rem;
+  font-weight:600;
+  text-align:center;
+  margin-bottom:32px;
+}
+
+/* SECTION */
+.section{
+  margin-bottom:28px;
+}
+.section-label{
+  font-size:.9rem;
+  font-weight:600;
+  color:#374151;
+  margin-bottom:12px;
+}
+
+/* GRID — ALWAYS 2 */
+.button-group{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+  gap:14px;
+}
+
+/* CARD */
+.option-btn {
+  padding: 22px 14px;
+  min-height: 100px;
+
+  font-size: 1.1rem;
+  font-weight: 600;
+
+  background-color: #ffffff;   /* EXPLICIT */
+  color: #111111;              /* EXPLICIT */
+
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+
+  cursor: pointer;
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.option-btn * {
+  color: inherit !important;
+}
+
+/* Hover (unselected only) */
+.option-btn:not(.selected):hover {
+  background-color: #f9fafb;
+  border-color: #111111;
+}
+
+
+.option-btn.selected{
+  bACKGROUND-color:#000000;
+  color: #ffffff;          /* ✅ WHITE TEXT */
+  border-color: #000000;
+}
+
+/* TEXTAREA */
+textarea{
+  font-size: 1.05rem;
+  line-height: 1.6;
+  width:100%;
+  min-height:110px;
+  padding:14px;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  font-family:Inter,sans-serif;
+}
+textarea:focus{
+  outline:none;
+  border-color:#000;
+}
+
+/* LOCATION */
+#getLocationBtn {
+  width: 100%;
+  padding: 18px;                   /* ⬅️ bigger tap area */
+  font-size: 1.15rem;              /* ⬅️ TEXT SIZE INCREASED */
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  background: #ffffff;
+  color: #111111;
+  border: 2px solid #3b82f6;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 28px;
+}
+
+#getLocationBtn:hover{
+  background: #111111;
+  color:#ffffff;
+  transform: translateY(-2px);
+}
+
+#map{
+  height:260px;
+  margin-top:16px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+}
+
+/* SUBMIT */
+button[type="submit"]{
+  width:100%;
+  margin-top:24px;
+  padding:16px;
+  background:#000;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:1.05rem;
+  font-weight:600;
+  cursor:pointer;
+}
+button[type="submit"]:hover{opacity:.9}
+
+/* MESSAGE */
+.message{
+  margin-top:16px;
+  text-align:center;
+  font-size:.9rem;
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <div class="logo" id="logo">FIXIT</div>
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="historyBtn">History</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<div class="form-container">
+<h2>Request Mechanic</h2>
+
+<form id="requestForm">
+
+<div class="section">
+  <div class="section-label">Vehicle Type</div>
+  <div class="button-group">
+    <button type="button" class="option-btn" data-vehicle="BIKE">🏍️ Bike</button>
+    <button type="button" class="option-btn" data-vehicle="CAR">🚗 Car</button>
+    <button type="button" class="option-btn" data-vehicle="AUTO">🛺 Auto</button>
+    <button type="button" class="option-btn" data-vehicle="TRUCK">🚚 Truck</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Service Type</div>
+  <div class="button-group">
+    <button type="button" class="option-btn" data-service="PUNCTURE">🔧 Puncture</button>
+    <button type="button" class="option-btn" data-service="BATTERY">🔋 Battery</button>
+    <button type="button" class="option-btn" data-service="ENGINE">⚙️ Engine</button>
+    <button type="button" class="option-btn" data-service="FUEL">⛽ Fuel</button>
+    <button type="button" class="option-btn" data-service="TOWING">🚙 Towing</button>
+    <button type="button" class="option-btn" data-service="OTHER">🔨 Other</button>
+  </div>
+</div>
+
+<input type="hidden" id="vehicleType">
+<input type="hidden" id="serviceType">
+
+<div class="section">
+  <div class="section-label">Describe the Issue</div>
+  <textarea id="description" placeholder="Explain the issue briefly..."></textarea>
+</div>
+
+<button type="button" id="getLocationBtn">📍 Get Current Location</button>
+<input type="hidden" id="lat">
+<input type="hidden" id="lng">
+<div id="map"></div>
+
+<button type="submit">Submit Request</button>
+
+</form>
+
+<p id="message" class="message"></p>
+</div>
+
+<script>
+document.getElementById("profileIcon").onclick=e=>{
+ e.stopPropagation();
+ document.getElementById("profileMenu").classList.toggle("active");
+};
+document.addEventListener("click",()=>document.getElementById("profileMenu").classList.remove("active"));
+
+document.querySelectorAll('[data-vehicle]').forEach(btn => {
+  btn.addEventListener('click', function () {
+
+    const isSelected = this.classList.contains('selected');
+
+    // Clear all vehicle selections
+    document.querySelectorAll('[data-vehicle]').forEach(b => b.classList.remove('selected'));
+    document.getElementById('vehicleType').value = "";
+
+    // Toggle behavior
+    if (!isSelected) {
+      this.classList.add('selected');
+      document.getElementById('vehicleType').value = this.dataset.vehicle;
+    }
+  });
+});
+document.querySelectorAll('[data-service]').forEach(btn => {
+  btn.addEventListener('click', function () {
+
+    const isSelected = this.classList.contains('selected');
+
+    // Clear all service selections
+    document.querySelectorAll('[data-service]').forEach(b => b.classList.remove('selected'));
+    document.getElementById('serviceType').value = "";
+
+    // Toggle behavior
+    if (!isSelected) {
+      this.classList.add('selected');
+      document.getElementById('serviceType').value = this.dataset.service;
+    }
+  });
+});
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry" async defer></script>
+<script type="module" src="./request-mechanic.js"></script>
+
+</body>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </html>

@@ -72,7 +72,6 @@ async function loadHistory(owner) {
                 <p><strong>Status:</strong> ${req.status}</p>
                 ${req.rating ? `<p><strong>Rating:</strong> ${req.rating}</p>` : ""}
                 ${req.feedback ? `<p><strong>Feedback:</strong> ${req.feedback}</p>` : ""}
-                <hr/>
             `;
 
             container.appendChild(div);

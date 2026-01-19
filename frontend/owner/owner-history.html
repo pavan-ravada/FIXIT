@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIXIT | Owner History</title>
@@ -169,12 +170,138 @@
             }
         }
     </style>
+=======
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Service History</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont;
+  background:#f9fafb;
+  color:#111111;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  padding:18px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.profile{
+  position:relative;
+}
+
+#profileIcon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:#ffffff;
+}
+
+/* DROPDOWN */
+.dropdown{
+  position:absolute;
+  right:0;
+  top:52px;
+  background:#ffffff;
+  border-radius:12px;
+  min-width:160px;
+  display:none;
+  z-index:2000;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+
+.dropdown.active{display:block}
+
+.dropdown p{
+  padding:12px 16px;
+  cursor:pointer;
+}
+
+.dropdown p+p{
+  border-top:1px solid #e5e7eb;
+}
+
+.dropdown p:hover{
+  background:#f3f4f6;
+}
+
+/* ================= PAGE ================= */
+.container{
+  flex:1;
+  max-width:900px;
+  width:100%;
+  margin:0 auto;
+  padding:28px 16px 40px;
+}
+
+h2{
+  font-size:1.6rem;
+  font-weight:600;
+  margin-bottom:22px;
+  text-align:center;
+}
+
+/* ================= HISTORY CARD ================= */
+.history-card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:18px 20px;
+  margin-bottom:14px;
+}
+
+.history-card p{
+  font-size:0.95rem;
+  margin-bottom:6px;
+  color:#374151;
+}
+
+.history-card strong{
+  color:#111111;
+}
+
+/* EMPTY */
+.empty{
+  text-align:center;
+  color:#6b7280;
+  padding:40px 0;
+}
+</style>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </head>
 
 <body>
 
 <!-- NAVBAR -->
 <div class="navbar">
+<<<<<<< HEAD
     <div class="logo" id="logo">FIXIT</div>
 
     <h2 style="margin:0;font-size:1.4rem;">Service History</h2>
@@ -207,6 +334,38 @@
     document.addEventListener("click", () => {
         document.getElementById("profileMenu").classList.remove("active");
     });
+=======
+  <div class="logo" id="logo">FIXIT</div>
+  <h2 style="margin:0;">Service History</h2>
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="dashboardBtn">Dashboard</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="container">
+  <div id="historyList" class="empty">Loading your history…</div>
+</div>
+
+<!-- NAVBAR LOGIC -->
+<script>
+document.getElementById("logo").onclick = () => {
+  window.location.href = "./owner-dashboard.html";
+};
+
+document.getElementById("profileIcon").onclick = (e) => {
+  e.stopPropagation();
+  document.getElementById("profileMenu").classList.toggle("active");
+};
+
+document.addEventListener("click", () => {
+  document.getElementById("profileMenu").classList.remove("active");
+});
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </script>
 
 <!-- MODULE -->

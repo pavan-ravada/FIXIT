@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<<<<<<< HEAD
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -364,4 +365,234 @@
     });
 </script><!-- OWNER DASHBOARD LOGIC -->
   <script type="module" src="./owner-dashboard.js"></script>
+=======
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Owner Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont;
+  background: #ffffff;
+  color: #111111;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* NAVBAR */
+.navbar {
+  padding: 20px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  cursor: pointer;
+}
+
+.profile {
+  position: relative;
+}
+
+#profileIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* DROPDOWN */
+.dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  min-width: 160px;
+  display: none;
+}
+
+.dropdown.active {
+  display: block;
+}
+
+.dropdown p {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.dropdown p + p {
+  border-top: 1px solid #e5e7eb; /* spacing between History & Logout */
+}
+
+.dropdown p:hover {
+  background: #f9fafb;
+}
+
+/* DASHBOARD */
+.dashboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.dashboard h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* PRIMARY CTA — FIXED */
+.primary-btn {
+  width: 100%;
+  max-width: 360px;
+  height: 52px;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.primary-btn:hover {
+  opacity: 0.9;
+}
+
+/* TRUST LINE */
+.trust-line {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .dashboard h1 {
+    font-size: 1.75rem;
+  }
+}
+
+/* FORCE PRIMARY CTA VISIBILITY */
+#newRequestBtn,
+#resumeRequestBtn {
+  display: none;   /* JS will control visibility */
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo" id="logo">FIXIT</div>
+
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="historyBtn">History</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard">
+  <h1>Welcome to FIXIT</h1>
+
+  <button id="newRequestBtn" class="primary-btn">
+    Request Mechanic
+  </button>
+
+  <!-- REQUIRED FOR JS (DO NOT REMOVE) -->
+  <button id="resumeRequestBtn" class="primary-btn">
+    Go to Active Request
+  </button>
+
+  <div class="trust-line">
+    Verified mechanics • Live tracking • Secure service
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const profileIcon = document.getElementById("profileIcon");
+  const profileMenu = document.getElementById("profileMenu");
+
+  const newRequestBtn = document.getElementById("newRequestBtn");
+  const resumeRequestBtn = document.getElementById("resumeRequestBtn");
+  const historyBtn = document.getElementById("historyBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  /* ---------------- PROFILE DROPDOWN ---------------- */
+  if (profileIcon && profileMenu) {
+    profileIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", () => {
+      profileMenu.classList.remove("active");
+    });
+  }
+
+  /* ---------------- BUTTON ACTIONS ---------------- */
+  if (newRequestBtn) {
+    newRequestBtn.addEventListener("click", () => {
+      window.location.href = "./request-mechanic.html";
+    });
+  }
+
+  if (resumeRequestBtn) {
+    resumeRequestBtn.addEventListener("click", () => {
+      window.location.href = "./request-status.html";
+    });
+  }
+
+  if (historyBtn) {
+    historyBtn.addEventListener("click", () => {
+      window.location.href = "./owner-history.html";
+    });
+  }
+
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "../index.html";
+    });
+  }
+
+});
+</script>
+
+<script type="module" src="./owner-dashboard.js"></script>
+
+</body>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </html>

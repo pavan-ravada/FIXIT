@@ -177,6 +177,7 @@ async function fetchRequests() {
 
     requests.forEach(req => {
       const card = document.createElement("div");
+<<<<<<< HEAD
       card.className = "request-card";
 
       card.innerHTML = `
@@ -184,6 +185,29 @@ async function fetchRequests() {
         <p><strong>Service:</strong> ${req.service_type}</p>
         <p><strong>Distance:</strong> ${req.distance_km} km</p>
         <button class="accept-btn">Accept</button>
+=======
+      console.log("REQ OBJECT 👉", req);
+      card.className = "request-card";
+
+      card.innerHTML = `
+        <div class="request-header">
+          <div class="badges">
+            <span class="badge vehicle">${req.vehicle_type}</span>
+            <span class="badge service">${req.service_type}</span>
+          </div>
+          <div class="distance">${req.distance_km} km</div>
+        </div>
+
+        <div class="request-body">
+          📍 ${req.issue_description && req.issue_description.trim() !== ""
+              ? req.issue_description
+              : "No additional details provided"}
+        </div>
+
+        <div class="request-actions">
+          <button class="accept-btn">Accept Request</button>
+        </div>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       `;
 
       card.querySelector(".accept-btn").onclick =

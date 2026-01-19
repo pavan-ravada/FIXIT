@@ -61,34 +61,43 @@ async function resolveDashboardState() {
 /* ======================================================
    NAVIGATION
    ====================================================== */
-newRequestBtn.onclick = () => {
-    window.location.href = "./request-mechanic.html";
-};
+if (newRequestBtn) {
+    newRequestBtn.onclick = () => {
+        window.location.href = "./request-mechanic.html";
+    };
+}
 
-resumeRequestBtn.onclick = () => {
-    window.location.href = "./request-status.html";
-};
+if (resumeRequestBtn) {
+    resumeRequestBtn.onclick = () => {
+        window.location.href = "./request-status.html";
+    };
+}
 
-historyBtn.onclick = () => {
-    window.location.href = "./owner-history.html";
-};
+if (historyBtn) {
+    historyBtn.onclick = () => {
+        window.location.href = "./owner-history.html";
+    };
+}
 
-logo.onclick = () => {
-    window.location.href = "./owner-dashboard.html";
-};
+if (logo) {
+    logo.onclick = () => {
+        window.location.href = "./owner-dashboard.html";
+    };
+}
 
-logoutBtn.onclick = async () => {
-    try {
-        await apiPost("/owner/logout", { phone: owner.phone });
-    } catch {}
+if (logoutBtn) {
+    logoutBtn.onclick = async () => {
+        try {
+            await apiPost("/owner/logout", { phone: owner.phone });
+        } catch {}
 
-    // 🔥 EXPLICIT LOGOUT ONLY
-    localStorage.removeItem("owner");
-    localStorage.removeItem("activeRequestId");
-    localStorage.removeItem("completedRequestId");
+        localStorage.removeItem("owner");
+        localStorage.removeItem("activeRequestId");
+        localStorage.removeItem("completedRequestId");
 
-    window.location.replace("../index.html");
-};
+        window.location.replace("../index.html");
+    };
+}
 
 /* ======================================================
    START

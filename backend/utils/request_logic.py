@@ -3,7 +3,11 @@ from firebase import get_db
 
 db = get_db()
 
+<<<<<<< HEAD
 RADIUS_STEPS = [3, 300, 8, 12]   # km
+=======
+RADIUS_STEPS = [3, 5, 8, 12]   # km
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 MAX_EXPANSIONS = 3            # 2 expansions → 15 minutes total
 EXPANSION_INTERVAL = 30
 

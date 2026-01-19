@@ -280,7 +280,8 @@ def fetch_nearby_requests():
                 "request_id": doc.id,
                 "vehicle_type": req.get("vehicle_type"),
                 "service_type": req.get("service_type"),
-                "distance_km": round(distance, 2)
+                "distance_km": round(distance, 2),
+                "issue_description": req.get("description", "")
             })
 
     return jsonify({"requests": results}), 200

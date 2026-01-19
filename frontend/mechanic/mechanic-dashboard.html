@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIXIT | Mechanic Dashboard</title>
 
+<<<<<<< HEAD
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+=======
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -13,6 +17,7 @@
 body{
   min-height:100vh;
   font-family:'Inter',sans-serif;
+<<<<<<< HEAD
   background:linear-gradient(135deg,#0f172a,#1e293b);
   color:#fff;
   display:flex;
@@ -98,6 +103,106 @@ h2{
 }
 
 /* AVAILABILITY */
+=======
+  background:#f9fafb;
+  color:#111827;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  height:68px;
+  padding:0 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.profile{position:relative}
+#profileIcon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:#ffffff;
+}
+
+/* PROFILE DROPDOWN */
+.dropdown{
+  display:none;
+  position:absolute;
+  right:0;
+  top:48px;
+  background:#ffffff;
+  border-radius:14px;
+  min-width:140px;
+  padding:6px 0;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+  z-index:2000;
+}
+.dropdown.active{display:block}
+.dropdown p{
+  padding:10px 16px;
+  font-size:.9rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.dropdown p:hover{background:#f3f4f6}
+
+/* ================= DASHBOARD ================= */
+.dashboard{
+  max-width:900px;
+  width:100%;
+  margin:0 auto;
+  padding:28px 20px 40px;
+}
+
+.dashboard h2 {
+  margin-bottom: 60px;
+}
+
+/* ================= ACTIVE JOB HERO ================= */
+
+.active-job-wrapper {
+  display: none; /* controlled by JS ONLY */
+  min-height: 40vh;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-btn {
+  padding: 22px 48px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  border-radius: 999px;
+  border: none;
+  background: #000000;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.dashboard h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 60px;
+}
+
+/* ================= AVAILABILITY ================= */
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 .availability{
   display:flex;
   justify-content:center;
@@ -105,6 +210,7 @@ h2{
   gap:16px;
   margin-bottom:28px;
 }
+<<<<<<< HEAD
 #statusLabel{
   font-weight:700;
   letter-spacing:1px;
@@ -118,15 +224,35 @@ h2{
   position:absolute;inset:0;
   background:#475569;border-radius:999px;
   transition:.3s;
+=======
+
+#statusLabel{
+  font-weight:600;
+  color:#6b7280;
+}
+
+/* SWITCH */
+.switch{position:relative;width:56px;height:30px}
+.switch input{display:none}
+.slider{
+  position:absolute;inset:0;
+  background:#d1d5db;
+  border-radius:999px;
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 .slider::before{
   content:'';
   position:absolute;
+<<<<<<< HEAD
   height:26px;width:26px;
+=======
+  height:24px;width:24px;
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   left:3px;bottom:3px;
   background:#fff;border-radius:50%;
   transition:.3s;
 }
+<<<<<<< HEAD
 .switch input:checked + .slider{background:#22c55e}
 .switch input:checked + .slider::before{transform:translateX(28px)}
 
@@ -204,6 +330,85 @@ h3{margin:24px 0 10px}
   transform: translateY(-3px) scale(1.02);
   box-shadow: 0 18px 55px rgba(251,146,60,0.7);
 }
+=======
+.switch input:checked + .slider{background:#16a34a}
+.switch input:checked + .slider::before{transform:translateX(26px)}
+
+/* ================= REQUESTS ================= */
+h3{
+  font-size:1.2rem;
+  font-weight:600;
+  margin-bottom:14px;
+}
+
+/* ================= REQUEST CARD (DESKTOP LOCKED) ================= */
+.request-card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+/* HEADER */
+.request-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.badges{
+  display:flex;
+  gap:8px;
+}
+
+.badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:700;
+}
+.badge.vehicle{background:#eef2ff;color:#3730a3}
+.badge.service{background:#fff7ed;color:#9a3412}
+
+.distance{
+  font-weight:800;
+  color:#16a34a;
+}
+
+/* BODY */
+.request-body{
+  font-size:.95rem;
+  font-weight:500;
+  color:#374151;
+  margin:10px 0 16px;
+}
+
+/* ACCEPT BUTTON — DESKTOP STYLE FOR ALL */
+.request-actions .accept-btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:#000000;
+  color:#ffffff;
+  font-weight:800;
+  font-size:1rem;
+  cursor:pointer;
+  box-shadow:none;
+}
+
+/* MESSAGE */
+#message{
+  margin-top:16px;
+  text-align:center;
+  color:#dc2626;
+}
+
+/* HIDDEN REAL BUTTON */
+#availabilityBtn{position:absolute;left:-9999px}
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </style>
 </head>
 
@@ -224,13 +429,18 @@ h3{margin:24px 0 10px}
 <div class="dashboard">
   <h2>Mechanic Dashboard</h2>
 
+<<<<<<< HEAD
   <div class="availability">
+=======
+  <div class="availability" id="availabilitySection">
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     <span id="statusLabel">OFFLINE</span>
     <label class="switch">
       <input type="checkbox" id="availabilityToggle">
       <span class="slider"></span>
     </label>
   </div>
+<<<<<<< HEAD
 
   <!-- JS CONTROLS THESE -->
   <button id="availabilityBtn">Go Online</button>
@@ -246,37 +456,105 @@ h3{margin:24px 0 10px}
   <h3>Nearby Requests</h3>
   <div id="requestsList">No nearby requests</div>
 
+=======
+
+  <button id="availabilityBtn">Go Online</button>
+
+  <div class="active-job-wrapper" id="activeJobWrapper">
+    <button id="activeJobBtn" class="hero-btn">
+      Go to Active Job
+    </button>
+  </div>
+
+  <h3 id="nearbyTitle">Nearby Requests</h3>
+  <div id="requestsList">No nearby requests</div>
+
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   <p id="message"></p>
 </div>
 
 <script>
+<<<<<<< HEAD
 /* PROFILE DROPDOWN */
+=======
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 profileIcon.onclick=e=>{
   e.stopPropagation();
   profileMenu.classList.toggle("active");
 };
 document.onclick=()=>profileMenu.classList.remove("active");
 
+<<<<<<< HEAD
 /* 🔥 TOGGLE ↔ BUTTON BRIDGE */
+=======
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 const toggle=document.getElementById("availabilityToggle");
 const label=document.getElementById("statusLabel");
 const realBtn=document.getElementById("availabilityBtn");
 
+<<<<<<< HEAD
 /* Toggle → Button */
 toggle.onchange=()=>{
   realBtn.click();
 };
 
 /* Button → Toggle (sync from JS updates) */
+=======
+toggle.onchange=()=>realBtn.click();
+
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 const observer=new MutationObserver(()=>{
   const online=realBtn.textContent.includes("Offline");
   toggle.checked=online;
   label.textContent=online?"ONLINE":"OFFLINE";
+<<<<<<< HEAD
   label.style.color=online?"#22c55e":"#94a3b8";
+=======
+  label.style.color=online?"#16a34a":"#6b7280";
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 });
 observer.observe(realBtn,{childList:true,subtree:true});
 </script>
 
+<<<<<<< HEAD
+=======
+<script>
+  const availabilitySection = document.getElementById("availabilitySection");
+  const nearbyTitle = document.getElementById("nearbyTitle");
+  const requestsList = document.getElementById("requestsList");
+  const activeJobWrapper = document.getElementById("activeJobWrapper");
+  const activeJobBtn = document.getElementById("activeJobBtn");
+
+  function applyDashboardUIState() {
+    const activeRequestId = localStorage.getItem("activeRequestId");
+
+    if (activeRequestId) {
+      // 🔴 ACTIVE JOB MODE
+      availabilitySection.style.display = "none";
+      nearbyTitle.style.display = "none";
+      requestsList.style.display = "none";
+
+      activeJobWrapper.style.display = "flex";
+    } else {
+      // 🟢 NORMAL DASHBOARD MODE
+      availabilitySection.style.display = "flex";
+      nearbyTitle.style.display = "block";
+      requestsList.style.display = "block";
+
+      activeJobWrapper.style.display = "none";
+    }
+  }
+
+  // Run on page load
+  applyDashboardUIState();
+
+  // Go to active job page
+  activeJobBtn.onclick = () => {
+    window.location.href = "./mechanic-active-job.html";
+  };
+</script>
+
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 <script type="module" src="./mechanic-dashboard.js"></script>
 </body>
 </html>

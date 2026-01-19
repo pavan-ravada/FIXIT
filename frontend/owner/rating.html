@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <script>
-        console.log("✅ RATING PAGE LOADED");
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Rate Service</title>
 
+<<<<<<< HEAD
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIXIT | Rate Service</title>
@@ -211,12 +212,178 @@
             font-size: 0.9rem;
         }
     </style>
+=======
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont;
+  background:#f9fafb;
+  color:#111111;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  padding:18px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.profile{
+  position:relative;
+}
+
+#profileIcon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:#ffffff;
+}
+
+/* DROPDOWN */
+.dropdown{
+  position:absolute;
+  right:0;
+  top:52px;
+  background:#ffffff;
+  border-radius:12px;
+  min-width:160px;
+  display:none;
+  z-index:2000;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+
+.dropdown.active{display:block}
+
+.dropdown p{
+  padding:12px 16px;
+  cursor:pointer;
+}
+
+.dropdown p+p{
+  border-top:1px solid #e5e7eb;
+}
+
+.dropdown p:hover{
+  background:#f3f4f6;
+}
+
+/* ================= CENTER ================= */
+.main-wrapper{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+/* ================= CARD ================= */
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:20px;
+  padding:28px;
+  width:100%;
+  max-width:420px;
+  text-align:center;
+}
+
+/* ================= TITLE ================= */
+.card h2{
+  font-size:1.5rem;
+  font-weight:600;
+  margin-bottom:18px;
+}
+
+/* ================= STARS ================= */
+.stars{
+  margin-bottom:18px;
+}
+
+.stars span{
+  font-size:36px;
+  cursor:pointer;
+  color:#d1d5db;
+  margin:0 4px;
+  transition:color 0.2s ease, transform 0.2s ease;
+}
+
+.stars span:hover{
+  transform:scale(1.15);
+}
+
+.stars span.active{
+  color:#facc15;
+}
+
+/* ================= FEEDBACK ================= */
+textarea{
+  width:100%;
+  min-height:90px;
+  padding:14px;
+  font-size:0.95rem;
+  font-family:Inter,sans-serif;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  resize:none;
+  margin-bottom:16px;
+}
+
+textarea:focus{
+  outline:none;
+  border-color:#111111;
+}
+
+/* ================= BUTTON ================= */
+button{
+  width:100%;
+  padding:14px;
+  font-size:1rem;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  border:none;
+  background:#000000;
+  color:#ffffff;
+}
+
+/* ================= MESSAGE ================= */
+#message{
+  margin-top:14px;
+  font-size:0.9rem;
+}
+</style>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </head>
 
 <body>
 
 <!-- NAVBAR -->
 <div class="navbar">
+<<<<<<< HEAD
     <div class="logo" id="logo">FIXIT</div>
     <h2 style="margin:0;font-size:1.4rem;">Rate Service</h2>
     <div class="profile">
@@ -225,24 +392,49 @@
             <p id="dashboardBtn">Dashboard</p>
             <p id="logoutBtn">Logout</p>
         </div>
+=======
+  <div class="logo" id="logo">FIXIT</div>
+
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="dashboardBtn">Dashboard</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<!-- CENTER CONTENT -->
+<div class="main-wrapper">
+  <div class="card">
+    <h2>Rate Your Service</h2>
+
+    <div class="stars" id="stars">
+      <span data-value="1">★</span>
+      <span data-value="2">★</span>
+      <span data-value="3">★</span>
+      <span data-value="4">★</span>
+      <span data-value="5">★</span>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- PERFECT CENTER -->
 <div class="main-wrapper">
     <div class="form-container">
         <h2>Rate Your Service</h2>
+=======
+    <textarea id="feedback" placeholder="Write feedback (optional)"></textarea>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
-        <div class="stars" id="stars">
-            <span data-value="1">★</span>
-            <span data-value="2">★</span>
-            <span data-value="3">★</span>
-            <span data-value="4">★</span>
-            <span data-value="5">★</span>
-        </div>
+    <button id="submitRatingBtn">Submit Rating</button>
 
-        <textarea id="feedback" placeholder="Write feedback (optional)"></textarea>
+    <p id="message"></p>
+  </div>
+</div>
 
+<<<<<<< HEAD
         <button onclick="submitFeedback()">Submit Rating</button>
 
         <p id="message"></p>
@@ -295,6 +487,53 @@
     });
 </script>
 
+=======
+<!-- NAVBAR LOGIC -->
+<script>
+/* FIXIT → DASHBOARD */
+document.getElementById("logo").onclick = () => {
+  window.location.href = "./owner-dashboard.html";
+};
+
+/* PROFILE MENU */
+const profileIcon = document.getElementById("profileIcon");
+const profileMenu = document.getElementById("profileMenu");
+
+profileIcon.onclick = (e) => {
+  e.stopPropagation();
+  profileMenu.classList.toggle("active");
+};
+
+document.addEventListener("click", () => {
+  profileMenu.classList.remove("active");
+});
+
+/* MENU ACTIONS */
+document.getElementById("dashboardBtn").onclick = () => {
+  window.location.href = "./owner-dashboard.html";
+};
+
+document.getElementById("logoutBtn").onclick = () => {
+  localStorage.clear();
+  window.location.href = "../index.html";
+};
+
+/* STAR UI */
+const stars = document.querySelectorAll("#stars span");
+let selectedRating = 0;
+
+stars.forEach(star => {
+  star.addEventListener("click", () => {
+    selectedRating = parseInt(star.dataset.value);
+    stars.forEach(s =>
+      s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating)
+    );
+  });
+});
+</script>
+
+<!-- MODULE SCRIPT -->
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 <script type="module" src="./rating.js"></script>
 
 </body>

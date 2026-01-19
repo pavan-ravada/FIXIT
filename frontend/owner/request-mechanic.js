@@ -5,7 +5,11 @@ console.log("🔥 request-mechanic.js loaded");
 // 🔧 DEMO MODE
 // 👉 Localhost = demo location
 // 👉 Production = real GPS
+<<<<<<< HEAD
 const DEMO_MODE = location.hostname === "production";
+=======
+const DEMO_MODE = location.hostname === "Production";
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
 document.addEventListener("DOMContentLoaded", () => {
 

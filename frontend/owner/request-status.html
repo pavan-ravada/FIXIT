@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<<<<<<< HEAD
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -427,4 +428,431 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry" defer></script>
 
     <script type="module" src="request-status.js"></script>
+=======
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Request Status</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont;
+  background:#f9fafb;
+  color:#111111;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  padding:18px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.profile{
+  position:relative;
+}
+
+#profileIcon{
+  width:42px;height:42px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+/* DROPDOWN */
+.dropdown{
+  position:absolute;
+  right:0;
+  top:52px;
+  background:#ffffff;
+  border-radius:12px;
+  min-width:160px;
+  display:none;
+
+  z-index:10001;   /* 🔥 MUST be higher than cards/map */
+}
+
+.dropdown.active{display:block}
+.dropdown p{
+  padding:12px 16px;
+  cursor:pointer;
+}
+.dropdown p+p{border-top:1px solid #e5e7eb}
+.dropdown p:hover{background:#f3f4f6}
+
+/* ================= CONTAINER ================= */
+.container{
+  flex:1;
+  max-width:820px;
+  width:100%;
+  margin:0 auto;
+  padding:24px 16px 32px;
+}
+
+/* ================= CARD BASE ================= */
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:20px;
+  padding:22px;
+
+  margin-bottom: 10px;
+}
+
+.card:has(.info-strip){
+  margin-top: 0;        /* visually attaches to map */
+  padding-top:14px;
+}
+
+/* CALM BREATHING ANIMATION */
+@keyframes calmPulse{
+  0%{box-shadow:0 0 0 rgba(0,0,0,0.05)}
+  50%{box-shadow:0 0 18px rgba(0,0,0,0.12)}
+  100%{box-shadow:0 0 0 rgba(0,0,0,0.05)}
+}
+.status-card{
+  animation:calmPulse 4.5s ease-in-out infinite;
+}
+
+/* ================= STATUS ================= */
+.status-title{
+  font-size:1.3rem;
+  font-weight:600;
+  margin-bottom:8px;
+}
+#statusText{
+  font-weight:600;
+  color:#16a34a;
+}
+.subtle{
+  font-size:.9rem;
+  color:#6b7280;
+  margin-top:4px;
+}
+
+/* ================= MAP ================= */
+#map{
+  height:340px;
+  width: 100%;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;   /* SAME BORDER */
+}
+
+/* ================= INFO STRIP ================= */
+.info-strip{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.info-pill{
+  padding:10px 0;          /* vertical rhythm only */
+  background:transparent; /* 🔥 REMOVE inner box */
+  border:none;             /* 🔥 REMOVE border */
+  border-radius:0;
+  font-size:1rem;
+  font-weight:500;
+  color:#111111;
+}
+
+/* ================= OTP ================= */
+#otpInput{
+  width:100%;
+  height:48px;
+  padding:14px 16px;
+  font-size:1rem;
+
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  background:#ffffff;
+
+  outline:none;
+}
+
+#otpMessage {
+  opacity: 1;
+  will-change: opacity;
+  transform: translateZ(0); /* Safari GPU kick */
+}
+
+#otpInput:focus{
+  border-color:#111111;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  font-size:1rem;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  border:none;
+}
+
+.primary{
+  background:#000;
+  color:#fff;
+}
+
+.danger{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.otp-message {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  position: relative;
+  z-index: 10;
+
+  min-height: 44px;          /* 🔥 SAFARI FIX */
+  display: block;            /* 🔥 SAFARI FIX */
+}
+
+#otpSection {
+  transition: opacity 0.2s ease;
+}
+
+#otpSection[hidden] {
+  display: block;
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#otpSection:not([hidden]) {
+  opacity: 1;
+  height: auto;
+  pointer-events: auto;
+}
+
+/* ================= MECHANIC MARKER ================= */
+@keyframes softPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.mechanic-marker::after {
+  content:'';
+  position:absolute;
+  width:160%;
+  height:160%;
+  border-radius:50%;
+  background:rgba(37,99,235,0.15);
+  animation:ring 3.8s ease-out infinite;
+}
+
+@keyframes ring {
+  0% { transform: scale(0.4); opacity:0.6 }
+  100% { transform: scale(1.2); opacity:0 }
+}
+
+.eta-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.eta-shimmer::after {
+  content:'';
+  position:absolute;
+  top:0;
+  left:-40%;
+  width:40%;
+  height:100%;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.6),
+    transparent
+  );
+  animation: shimmer 2.8s infinite;
+}
+
+/* Make ETA feel attached to map */
+.map-card {
+  padding-bottom: 14px;
+}
+
+.radius-box{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+}
+
+#profileIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+
+  cursor: pointer;
+
+  position: relative;
+  z-index: 100000;     /* ABOVE NAVBAR */
+  pointer-events: auto;
+}
+
+@keyframes shimmer {
+  100% { left: 120%; }
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:480px){
+  #map{height:260px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo" id="logo">FIXIT</div>
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="historyBtn">History</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- STATUS -->
+  <div class="card status-card">
+    <div class="status-title">🔍 Searching for nearby mechanics</div>
+    <div id="statusText">Accepted</div>
+    <p id="calmText" class="subtle">Help is on the way…</p>
+  </div>
+
+  <!-- SEARCHING RADIUS INFO (REQUIRED FOR SEARCHING STATE) -->
+  <div class="card radius-box" style="display:none;">
+    <div id="radiusText" style="font-weight:600;"></div>
+    <p id="timerText" class="subtle" style="margin-top:6px;"></p>
+  </div>
+
+  <!-- MAP -->
+  <div class="card map-card">
+    <div id="map"></div>
+
+    <div class="info-strip" style="margin-top:14px">
+        <div id="etaText" class="info-pill">⏱ ETA: calculating…</div>
+        <div id="distanceText" class="info-pill">📍 Distance: calculating…</div>
+    </div>
+  </div>
+
+  <!-- OTP -->
+  <div class="card" id="otpSection" hidden>
+    <div id="otpMessage" class="otp-message" style="display:none;"></div>
+
+    <input id="otpInput" placeholder="Enter OTP from mechanic">
+    <button id="verifyOtpBtn" class="primary" style="margin-top:12px">
+      Verify OTP
+    </button>
+  </div>
+
+  <!-- ACTIONS -->
+  <button id="completeBtn" class="primary" style="display:none;margin-bottom:12px">
+    Complete Job
+  </button>
+  <button id="cancelBtn" class="danger">
+    Cancel Request
+  </button>
+
+</div>
+
+<!-- GOOGLE MAPS -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=geometry" defer></script>
+
+<script>
+/* PROFILE MENU */
+const profileIcon = document.getElementById("profileIcon");
+const profileMenu = document.getElementById("profileMenu");
+
+if (profileIcon && profileMenu) {
+  profileIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle("active");
+  });
+
+  document.addEventListener("click", () => {
+    profileMenu.classList.remove("active");
+  });
+}
+
+/* FIXIT LOGO → DASHBOARD */
+document.getElementById("logo").onclick=()=>{
+  window.location.href="./owner-dashboard.html";
+};
+
+/* CALM TEXT ROTATION */
+/* CALM TEXT ROTATION */
+const calmMessages = [
+  "Help is on the way…",
+  "Tracking mechanic in real time",
+  "You’re safe — stay relaxed",
+  "Almost there 🚗"
+];
+
+let calmIndex = 0;
+
+// 🔥 SINGLE GLOBAL INTERVAL (THIS IS THE ONLY ONE)
+window.calmInterval = setInterval(() => {
+  const calmText = document.getElementById("calmText");
+  if (!calmText) return;
+
+  calmIndex = (calmIndex + 1) % calmMessages.length;
+  calmText.textContent = calmMessages[calmIndex];
+}, 4000);
+
+
+/* UBER-STYLE ETA SMOOTHING */
+function smoothETA(from,to){
+  let start=null;
+  function step(t){
+    if(!start)start=t;
+    const p=Math.min((t-start)/900,1);
+    const v=Math.round(from+(to-from)*p);
+    etaText.textContent=`⏱ ETA: ${v} mins`;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+</script>
+
+<script type="module" src="request-status.js"></script>
+</body>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </html>

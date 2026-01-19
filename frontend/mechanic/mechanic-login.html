@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIXIT | Mechanic Login</title>
@@ -257,16 +258,195 @@
             color: #6ee7b7;
         }
     </style>
+=======
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Mechanic Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont;
+  background:#f9fafb;
+  color:#111111;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* NAVBAR */
+.navbar{
+  padding:18px 28px;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+}
+
+/* FORM LAYOUT */
+.form-container{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 16px;
+}
+.form-wrapper{
+  width:100%;
+  max-width:420px;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:36px 32px;
+}
+
+/* HEADINGS */
+.role-badge{
+  display:inline-block;
+  font-size:0.75rem;
+  font-weight:600;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  margin-bottom:16px;
+}
+h2{
+  font-size:1.6rem;
+  font-weight:600;
+  margin-bottom:6px;
+}
+.subtitle{
+  font-size:0.95rem;
+  color:#6b7280;
+  margin-bottom:28px;
+}
+
+/* FORM */
+form{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+label{
+  font-size:0.85rem;
+  font-weight:500;
+  color:#374151;
+  margin-bottom:10px;
+  display:block;
+}
+
+/* INPUTS */
+input{
+  width:100%;
+  height:48px;
+  padding:0 14px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  background:#ffffff;
+  font-size:1rem;
+}
+input::placeholder{
+  color:#9ca3af;
+  font-weight:500;
+}
+input:focus{
+  outline:none;
+  border-color:#111111;
+}
+
+/* PASSWORD */
+.password-box{
+  height:48px;
+  display:flex;
+  align-items:center;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  overflow:hidden;
+}
+.password-box:focus-within{
+  border-color:#111111;
+}
+.password-box input{
+  flex:1;
+  height:100%;
+  border:none;
+  padding-right:44px;
+}
+
+/* TOGGLE */
+.toggle-password{
+  width:44px;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:none;
+  border:none;
+  cursor:pointer;
+}
+.eye{
+  width:20px;
+  height:20px;
+  fill:#6b7280;
+}
+.toggle-password:hover .eye{
+  fill:#111111;
+}
+
+/* BUTTON */
+button[type="submit"]{
+  margin-top:8px;
+  height:48px;
+  background:#000000;
+  color:#ffffff;
+  border:none;
+  border-radius:14px;
+  font-size:1rem;
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* MESSAGE */
+#message{
+  margin-top:16px;
+  text-align:center;
+  font-size:0.9rem;
+  color:#dc2626;
+}
+
+/* LINKS */
+.link{
+  margin-top:18px;
+  text-align:center;
+  font-size:0.9rem;
+  color:#6b7280;
+}
+.link a{
+  color:#000000;
+  font-weight:600;
+  text-decoration:none;
+}
+</style>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </head>
 
 <body>
 
+<<<<<<< HEAD
 <!-- Navbar -->
+=======
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 <div class="navbar">
-    <div class="logo">FIXIT</div>
+  <div class="logo">FIXIT</div>
 </div>
 
 <div class="form-container">
+<<<<<<< HEAD
     <div class="form-wrapper">
 
         <div class="role-badge">
@@ -314,6 +494,63 @@
             button.textContent = '👁️';
         }
     }
+=======
+  <div class="form-wrapper">
+
+    <div class="role-badge">🛠️ MECHANIC</div>
+    <h2>Welcome back</h2>
+    <p class="subtitle">Login to provide roadside assistance</p>
+
+    <form id="loginForm">
+
+      <div>
+        <label>Phone Number</label>
+        <input id="phone"
+               placeholder="Enter 10-digit number"
+               maxlength="10"
+               inputmode="numeric"
+               required>
+      </div>
+
+      <div>
+        <label>Password</label>
+        <div class="password-box">
+          <input type="password" id="password" placeholder="Enter your password" required>
+          <button type="button" class="toggle-password" onclick="togglePassword()">
+            <svg class="eye" viewBox="0 0 24 24">
+              <path d="M12 5C5 5 1 12 1 12s4 7 11 7 11-7 11-7-4-7-11-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p id="message"></p>
+
+    <p class="link">
+      New mechanic?
+      <a href="./mechanic-register.html">Create an account</a>
+    </p>
+
+  </div>
+</div>
+
+<script>
+function togglePassword(){
+  const input = document.getElementById("password");
+  const eye = document.querySelector(".eye");
+
+  if(input.type === "password"){
+    input.type = "text";
+    eye.style.opacity = "0.5";
+  }else{
+    input.type = "password";
+    eye.style.opacity = "1";
+  }
+}
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </script>
 
 <script type="module" src="./mechanic-login.js"></script>

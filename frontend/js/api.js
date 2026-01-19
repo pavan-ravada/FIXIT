@@ -15,9 +15,16 @@ async function request(url, method = "GET", body = null) {
   const res = await fetch(BASE_URL + url, options);
   const data = await res.json().catch(() => ({}));
 
-  // ❌ Backend error → throw readable message
+  // ✅ Preserve backend error details
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Request failed");
+    const error = new Error(
+      data.error || data.message || "Request failed"
+    );
+
+    // 🔥 THIS IS THE KEY FIX
+    error.response = { data };
+
+    throw error;
   }
 
   return data;

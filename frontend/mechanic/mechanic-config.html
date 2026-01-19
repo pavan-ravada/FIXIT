@@ -5,6 +5,7 @@
   <title>FIXIT | Mechanic Configure</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<<<<<<< HEAD
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/navbar.css">
   <link rel="stylesheet" href="../css/forms.css">
@@ -197,6 +198,178 @@
 
       h2 {
         font-size: 1.8rem;
+=======
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    body{
+      min-height:100vh;
+      background:#f9fafb;
+      font-family:'Inter',sans-serif;
+      color:#111827;
+    }
+
+    /* ================= NAVBAR ================= */
+    .navbar{
+      height:68px;
+      padding:0 28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#ffffff;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    .logo{
+      font-size:1.4rem;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .profile{position:relative}
+
+    #profileIcon{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      border:1px solid #e5e7eb;
+      background:#ffffff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .dropdown{
+      display:none;
+      position:absolute;
+      right:0;
+      top:48px;
+      background:#ffffff;
+      border-radius:14px;
+      min-width:150px;
+      padding:6px 0;
+      box-shadow:0 12px 30px rgba(0,0,0,.12);
+      z-index:100;
+    }
+
+    .dropdown.active{display:block}
+
+    .dropdown p{
+      padding:10px 16px;
+      font-size:.9rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .dropdown p:hover{background:#f3f4f6}
+
+    /* ================= FORM CONTAINER ================= */
+    .form-container{
+      max-width:1100px;
+      margin:32px auto;
+      padding:32px 24px 40px;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:24px;
+      box-shadow:0 10px 30px rgba(0,0,0,.06);
+    }
+
+    h2{
+      text-align:center;
+      font-size:1.9rem;
+      font-weight:700;
+      margin-bottom:32px;
+    }
+
+    h4{
+      font-size:1.05rem;
+      font-weight:700;
+      margin-bottom:14px;
+      color:#374151;
+    }
+
+    /* ================= OPTION GRID ================= */
+    .option-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:14px;
+      margin-bottom:28px;
+    }
+
+    .option-btn{
+      padding:14px 12px;
+      border-radius:14px;
+      background:#f9fafb;
+      border:2px solid #e5e7eb;
+      font-size:.95rem;
+      font-weight:600;
+      color:#374151;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition:all .25s ease;
+      user-select:none;
+    }
+
+    /* 🔥 HOVER — LIGHT BLACK */
+    .option-btn:hover{
+      background:#f3f4f6;
+      border-color:#111827;
+      color:#111827;
+    }
+
+    /* 🔥 SELECTED — BLACK */
+    .option-btn.active{
+      background:#111827;
+      border-color:#111827;
+      color:#ffffff;
+      box-shadow:none;
+    }
+
+    /* ================= SAVE BUTTON ================= */
+    #saveBtn{
+      width:100%;
+      padding:16px;
+      border-radius:16px;
+      border:none;
+      background:#000000;
+      color:#ffffff;
+      font-size:1.05rem;
+      font-weight:700;
+      cursor:pointer;
+      transition:all .25s ease;
+      margin-top:8px;
+    }
+
+    #saveBtn:hover{
+      background:#111827;
+      transform:translateY(-1px);
+    }
+
+    #message{
+      margin-top:14px;
+      font-size:.95rem;
+      font-weight:600;
+    }
+
+    /* ================= MOBILE ================= */
+    @media(max-width:768px){
+      .form-container{
+        margin:20px 14px;
+        padding:24px 18px 32px;
+      }
+
+      h2{font-size:1.6rem}
+
+      /* 🔥 2 BUTTONS PER ROW */
+      .option-grid{
+        grid-template-columns:repeat(2,1fr);
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       }
     }
   </style>
@@ -209,7 +382,11 @@
   <div class="logo" id="logo">FIXIT</div>
 
   <div class="profile">
+<<<<<<< HEAD
     <button id="profileIcon" type="button">👤</button>
+=======
+    <div id="profileIcon">👤</div>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     <div class="dropdown" id="profileMenu">
       <p id="dashboardBtn">Dashboard</p>
       <p id="historyBtn">History</p>
@@ -222,7 +399,10 @@
 <div class="form-container">
   <h2>Configure Skills</h2>
 
+<<<<<<< HEAD
   <!-- VEHICLE TYPES -->
+=======
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   <h4>Vehicle Types</h4>
   <div class="option-grid" id="vehicleTypes">
     <div class="option-btn" data-value="BIKE">🏍 Bike</div>
@@ -232,7 +412,10 @@
     <div class="option-btn" data-value="LORRY">🚚 Lorry</div>
   </div>
 
+<<<<<<< HEAD
   <!-- SERVICE TYPES -->
+=======
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   <h4>Service Types</h4>
   <div class="option-grid" id="serviceTypes">
     <div class="option-btn" data-value="PUNCTURE">🔧 Puncture</div>
@@ -244,6 +427,7 @@
   </div>
 
   <button id="saveBtn">Save Configuration</button>
+<<<<<<< HEAD
 
   <p id="message" class="message"></p>
 </div>
@@ -265,16 +449,42 @@
   const profileMenu = document.getElementById("profileMenu");
 
   profileIcon.onclick = (e) => {
+=======
+  <p id="message"></p>
+</div>
+
+<script>
+  document.querySelectorAll(".option-btn").forEach(btn=>{
+    btn.onclick=()=>btn.classList.toggle("active");
+  });
+
+  document.getElementById("logo").onclick =
+    ()=>location.href="./mechanic-dashboard.html";
+
+  const profileIcon=document.getElementById("profileIcon");
+  const profileMenu=document.getElementById("profileMenu");
+
+  profileIcon.onclick=e=>{
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     e.stopPropagation();
     profileMenu.classList.toggle("active");
   };
 
+<<<<<<< HEAD
   document.addEventListener("click", () =>
     profileMenu.classList.remove("active")
   );
+=======
+  document.addEventListener("click",()=>profileMenu.classList.remove("active"));
+
+  document.getElementById("dashboardBtn").onclick =
+    ()=>location.href="./mechanic-dashboard.html";
+
+  document.getElementById("historyBtn").onclick =
+    ()=>location.href="./mechanic-history.html";
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </script>
 
 <script type="module" src="./mechanic-config.js"></script>
-
 </body>
 </html>

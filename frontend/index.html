@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<<<<<<< HEAD
  <head>
   <script>
         console.error("🚨 INDEX PAGE LOADED 🚨");
@@ -434,4 +435,232 @@
    🌍 Available 24/7 • 🚀 Fast Response • ⭐ Rated Service
   </div>
   <script src="./js/index.js"></script>
+=======
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIXIT | Roadside Assistance</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont;
+  background: #ffffff;
+  color: #111111;
+  min-height: 100vh;
+}
+
+/* ---------- LAYOUT ---------- */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ---------- BRAND ---------- */
+.brand {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.brand h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.tagline {
+  margin-top: 8px;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* ---------- ROLE SELECTION ---------- */
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 520px;
+  margin: 0 auto 64px;
+}
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.card:hover {
+  border-color: #111111;
+}
+
+.card-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.card h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.card p {
+  margin-top: 6px;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Owner emphasis */
+.card[data-role="owner"] {
+  border-color: #111111;
+}
+
+/* ---------- INFO SECTION ---------- */
+.info-section {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.info-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.info-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.info-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.info-card p {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ---------- FOOTER ---------- */
+.footer-info {
+  margin-top: 48px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 768px) {
+  .brand h1 {
+    font-size: 2.5rem;
+  }
+
+  .roles {
+    grid-template-columns: 1fr;
+    margin-bottom: 48px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <div class="logo">🔧</div>
+    <h1>FIXIT</h1>
+    <p class="tagline">Roadside help, when you need it.</p>
+  </div>
+
+  <!-- ROLE SELECTION -->
+  <div class="roles">
+    <div class="card" data-role="owner" onclick="goOwner()">
+      <div class="card-icon">🚗</div>
+      <h2>Owner</h2>
+      <p>Request roadside assistance</p>
+    </div>
+
+    <div class="card" data-role="mechanic" onclick="goMechanic()">
+      <div class="card-icon">🧑‍🔧</div>
+      <h2>Mechanic</h2>
+      <p>Accept nearby service jobs</p>
+    </div>
+  </div>
+
+  <!-- INFO -->
+  <div class="info-section">
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">⚡</div>
+        <h3>Instant Matching</h3>
+        <p>Nearby mechanics are matched in seconds.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🗺️</div>
+        <h3>Live Tracking</h3>
+        <p>Track the mechanic with real-time ETA.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🔒</div>
+        <h3>Verified Service</h3>
+        <p>OTP-based job completion for safety.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">💰</div>
+        <h3>Transparent Pricing</h3>
+        <p>Clear pricing based on distance and service.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-info">
+    Available 24/7 • Real-time assistance • Trusted professionals
+  </div>
+
+</div>
+
+<script src="./js/index.js"></script>
+</body>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </html>

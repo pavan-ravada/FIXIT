@@ -27,18 +27,27 @@ document.querySelectorAll("#stars span").forEach(star => {
     };
 });
 
-window.submitFeedback = async function () {
-    if (!owner || !requestId) {
-        alert("Missing session or request");
-        return;
-    }
+const submitBtn = document.getElementById("submitRatingBtn");
 
-    await apiPost(`/owner/request/feedback/${requestId}`, {
-        phone: owner.phone,
-        rating: selectedRating,
-        feedback: document.getElementById("feedback").value
+if (submitBtn) {
+    submitBtn.addEventListener("click", async () => {
+        if (!owner || !requestId) {
+            alert("Missing session or request");
+            return;
+        }
+
+        if (selectedRating === 0) {
+            alert("Please select a rating");
+            return;
+        }
+
+        await apiPost(`/owner/request/feedback/${requestId}`, {
+            phone: owner.phone,
+            rating: selectedRating,
+            feedback: document.getElementById("feedback").value
+        });
+
+        localStorage.removeItem("completedRequestId");
+        window.location.href = "./owner-dashboard.html";
     });
-
-    localStorage.removeItem("completedRequestId");
-    window.location.href = "./owner-dashboard.html";
-};
+}

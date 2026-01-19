@@ -5,6 +5,7 @@
   <title>FIXIT | Mechanic History</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<<<<<<< HEAD
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/navbar.css">
   <link rel="stylesheet" href="../css/dashboard.css">
@@ -173,6 +174,200 @@
       h2 {
         font-size: 1.8rem;
       }
+=======
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+
+    body{
+      min-height:100vh;
+      background:#f9fafb;
+      font-family:'Inter',sans-serif;
+      color:#111827;
+    }
+
+    /* ================= NAVBAR ================= */
+    .navbar{
+      height:68px;
+      padding:0 28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#ffffff;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    /* 🔥 FORCE REMOVE ANY DIVIDER LINES IN HISTORY CARDS */
+    .history-card hr {
+      display: none !important;
+    }
+
+    .history-card * {
+      border-bottom: none !important;
+    }
+
+
+    .logo{
+      font-size:1.4rem;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .profile{position:relative}
+    #profileIcon{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      border:1px solid #e5e7eb;
+      background:#ffffff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+
+    .dropdown{
+      display:none;
+      position:absolute;
+      right:0;
+      top:48px;
+      background:#ffffff;
+      border-radius:14px;
+      min-width:150px;
+      padding:6px 0;
+      box-shadow:0 12px 30px rgba(0,0,0,.12);
+      z-index:100;
+    }
+    .dropdown.active{display:block}
+    .dropdown p{
+      padding:10px 16px;
+      font-size:.9rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .dropdown p:hover{background:#f3f4f6}
+
+    /* ================= PAGE ================= */
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:32px 20px 48px;
+    }
+
+    h2{
+      text-align:center;
+      font-size:1.8rem;
+      font-weight:700;
+      margin-bottom:32px;
+    }
+
+    /* ================= HISTORY LIST ================= */
+    #historyList{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .history-card{
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      padding:20px 22px;
+      transition:box-shadow .25s ease, transform .25s ease;
+    }
+
+    .history-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 28px rgba(0,0,0,.08);
+    }
+
+    .history-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .badges{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:.75rem;
+      font-weight:700;
+    }
+
+    .badge.vehicle{
+      background:#eef2ff;
+      color:#3730a3;
+    }
+
+    .badge.service{
+      background:#fff7ed;
+      color:#9a3412;
+    }
+
+    .status{
+      padding:6px 14px;
+      border-radius:999px;
+      font-size:.75rem;
+      font-weight:800;
+      text-transform:uppercase;
+    }
+
+    .status.completed{
+      background:#ecfdf5;
+      color:#16a34a;
+    }
+
+    .status.cancelled{
+      background:#fef2f2;
+      color:#dc2626;
+    }
+
+    .status.timeout{
+      background:#fffbeb;
+      color:#d97706;
+    }
+
+    .history-body{
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      font-size:.95rem;
+      color:#374151;
+    }
+
+    .history-body strong{color:#111827}
+
+    .empty{
+      text-align:center;
+      color:#6b7280;
+      padding:48px 0;
+      font-size:1rem;
+    }
+
+    @media(max-width:768px){
+      .container{padding:24px 16px 40px}
+      h2{font-size:1.6rem}
+    }
+
+    /* 🔥 REMOVE UNDERLINE FROM FEEDBACK (AND ANY LINKS) */
+    .history-card a,
+    .history-card a:visited,
+    .history-card a:hover,
+    .history-card a:active {
+      text-decoration: none !important;
+      color: inherit;
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     }
   </style>
 </head>
@@ -184,7 +379,11 @@
   <div class="logo" id="logo">FIXIT</div>
 
   <div class="profile">
+<<<<<<< HEAD
     <button id="profileIcon" type="button">👤</button>
+=======
+    <div id="profileIcon">👤</div>
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     <div class="dropdown" id="profileMenu">
       <p id="dashboardBtn">Dashboard</p>
       <p id="logoutBtn">Logout</p>
@@ -192,8 +391,13 @@
   </div>
 </div>
 
+<<<<<<< HEAD
 <!-- ================= PAGE ================= -->
 <div class="dashboard-container">
+=======
+<!-- PAGE -->
+<div class="container">
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   <h2>Job History</h2>
 
   <div id="historyList">
@@ -201,6 +405,7 @@
   </div>
 </div>
 
+<<<<<<< HEAD
 <!-- ================= UI LOGIC ================= -->
 <script>
   document.getElementById("logo").onclick = () => {
@@ -210,6 +415,16 @@
   const profileIcon = document.getElementById("profileIcon");
   const profileMenu = document.getElementById("profileMenu");
 
+=======
+<!-- UI LOGIC -->
+<script>
+  const logo = document.getElementById("logo");
+  const profileIcon = document.getElementById("profileIcon");
+  const profileMenu = document.getElementById("profileMenu");
+
+  logo.onclick = () => location.href = "./mechanic-dashboard.html";
+
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   profileIcon.onclick = (e) => {
     e.stopPropagation();
     profileMenu.classList.toggle("active");
@@ -219,12 +434,16 @@
     profileMenu.classList.remove("active");
   });
 
+<<<<<<< HEAD
   document.getElementById("dashboardBtn").onclick = () => {
     window.location.href = "./mechanic-dashboard.html";
   };
+=======
+  document.getElementById("dashboardBtn").onclick =
+    () => location.href = "./mechanic-dashboard.html";
+>>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 </script>
 
 <script type="module" src="./mechanic-history.js"></script>
-
 </body>
 </html>
