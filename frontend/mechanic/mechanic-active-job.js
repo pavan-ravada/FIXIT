@@ -4,7 +4,7 @@ import { apiGet, apiPost } from "../js/api.js";
 const MIN_MOVE_METERS = 5;
 const ROUTE_RECALC_METERS = 60;
 
-const DEMO_MODE = flase;
+const DEMO_MODE = true;
 
 const MOCK_MECH_LOCATION = {
   lat: 12.9716,   // Bengaluru
@@ -76,8 +76,6 @@ let directionsRenderer = null;
 let ownerLoc = null;
 let mechLoc = null;
 let lastSentLoc = null;
-
-let mapInitStarted = false;
 let trackingStarted = false;
 let routeDrawn = false;
 
@@ -98,37 +96,73 @@ function stopLiveTracking() {
   }
 }
 
-/* ================= MAP INIT ================= */
-function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  if (!window.googleMapsReady) {
-    console.warn("⏳ Waiting for Google Maps...");
+function tryInitMap() {
+  if (
+    map ||                // already created
+    !ownerLoc ||           // owner location not ready
+    !mechLoc ||            // mechanic location not ready
+    !window.google ||
+    !google.maps ||
+    typeof google.maps.Map !== "function"
+  ) {
     return;
   }
 
-  if (!window.google || !window.google.maps || map) return;
+  initMap(
+    ownerLoc.lat,
+    ownerLoc.lng,
+    mechLoc.lat,
+    mechLoc.lng
+  );
+}
 
-  map = new google.maps.Map(document.getElementById("map"), {
+/* ================= MAP INIT ================= */
+function initMap(ownerLat, ownerLng, mechLat, mechLng) {
+  /* ================= HARD SAFETY CHECKS ================= */
+  if (
+    typeof window.google === "undefined" ||
+    typeof google.maps === "undefined" ||
+    typeof google.maps.Map !== "function"
+  ) {
+    console.warn("⏳ Google Maps not ready yet");
+    return;
+  }
+
+  /* ================= PREVENT DOUBLE INIT ================= */
+  if (map) return;
+
+  const mapEl = document.getElementById("map");
+  if (!mapEl) {
+    console.error("❌ Map container not found");
+    return;
+  }
+
+  /* ================= CREATE MAP ================= */
+  map = new google.maps.Map(mapEl, {
     center: { lat: mechLat, lng: mechLng },
     zoom: 16,
     disableDefaultUI: true
   });
 
+  /* ================= DIRECTIONS ================= */
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
-    map,
+    map: map,
     suppressMarkers: true
   });
 
+  /* ================= OWNER MARKER ================= */
   ownerMarker = new google.maps.Marker({
     position: { lat: ownerLat, lng: ownerLng },
-    map,
+    map: map,
     title: "Owner",
     icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
   });
 
+  /* ================= MECHANIC MARKER ================= */
   mechanicMarker = new google.maps.Marker({
     position: { lat: mechLat, lng: mechLng },
-    map,
+    map: map,
     title: "You",
     icon: {
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
@@ -139,11 +173,13 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     }
   });
 
+  /* ================= INITIAL ROUTE ================= */
   drawRoute(mechLat, mechLng, ownerLat, ownerLng);
   routeDrawn = true;
 
+  /* ================= MOBILE / TAB FIX ================= */
   setTimeout(() => {
-    if (!map) return;
+    if (!map || !mechanicMarker) return;
 
     google.maps.event.trigger(map, "resize");
     map.setCenter(mechanicMarker.getPosition());
@@ -225,50 +261,37 @@ async function fetchJob() {
 
   ownerLoc = data.ownerLocation || ownerLoc;
 
-  /* ✅ MAP INIT */
-  if (ownerLoc && !mapInitStarted) {
-    mapInitStarted = true;
+  /* ================= MAP DATA SETUP ================= */
 
-    if (DEMO_MODE) {
-      // 🧪 DEMO LOCATION
-      mechLoc = { ...MOCK_MECH_LOCATION };
-
-      initMap(
-        ownerLoc.lat,
-        ownerLoc.lng,
-        mechLoc.lat,
-        mechLoc.lng
-      );
-
-      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
-      // ✅ ENABLE BUTTON HERE
-
-    } else {
-      // 📍 REAL GPS MODE
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-
-          mechLoc = { lat, lng };
-
-          initMap(
-            ownerLoc.lat,
-            ownerLoc.lng,
-            lat,
-            lng
-          );
-
-          // ✅ ENABLE BUTTON HERE
-        },
-        err => {
-          console.error("GPS error", err);
-          alert("Enable GPS to continue");
-        },
-        { enableHighAccuracy: true }
-      );
-    }
+  // owner location from backend
+  if (data.ownerLocation) {
+    ownerLoc = data.ownerLocation;
   }
+
+  // mechanic location
+  if (DEMO_MODE && !mechLoc) {
+    mechLoc = { ...MOCK_MECH_LOCATION };
+    sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+  }
+
+  if (!DEMO_MODE && !mechLoc) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        mechLoc = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+      },
+      err => {
+        console.error("GPS error", err);
+        alert("Enable GPS to continue");
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+
+  // 🔁 SAFE RETRY (KEY LINE)
+  tryInitMap();
 
   /* 🔁 UPDATE FROM FIRESTORE */
   if (data.mechanicLocation && map) {
@@ -333,6 +356,16 @@ function startLiveTracking() {
 fetchJob();
 setInterval(fetchJob, 5000);
 
+/* 🔁 SAFE MAP RETRY (FIXES REFRESH ISSUE) */
+const mapRetry = setInterval(() => {
+  if (map) {
+    clearInterval(mapRetry);
+    return;
+  }
+  tryInitMap();
+}, 300);
+
+/* ▶ START TRACKING ONLY AFTER MAP EXISTS */
 const wait = setInterval(() => {
   if (map && ownerMarker) {
     startLiveTracking();
