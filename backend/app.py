@@ -4,7 +4,6 @@ from flask_cors import CORS
 
 from routes.owner import owner_bp
 from routes.mechanic import mechanic_bp
-from routes.admin import admin_bp
 
 app = Flask(__name__)
 
@@ -25,7 +24,6 @@ CORS(
 # ✅ BLUEPRINTS
 app.register_blueprint(owner_bp, url_prefix="/owner")
 app.register_blueprint(mechanic_bp, url_prefix="/mechanic")
-app.register_blueprint(admin_bp, url_prefix="/admin")
 
 @app.route("/")
 def health():
