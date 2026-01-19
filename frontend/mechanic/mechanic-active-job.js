@@ -4,7 +4,7 @@ import { apiGet, apiPost } from "../js/api.js";
 const MIN_MOVE_METERS = 5;
 const ROUTE_RECALC_METERS = 60;
 
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 const MOCK_MECH_LOCATION = {
   lat: 12.9716,   // Bengaluru
