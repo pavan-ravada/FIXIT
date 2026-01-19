@@ -1,24 +1,14 @@
 from flask import Flask
-from flask_cors import CORS
 import os
+from flask_cors import CORS
 
 from routes.owner import owner_bp
 from routes.mechanic import mechanic_bp
+from routes.admin import admin_bp
 
 app = Flask(__name__)
 
-<<<<<<< HEAD
-# Allow frontend on 5001
-from flask_cors import CORS
-
-from flask_cors import CORS
-
-CORS(
-    app,
-    resources={r"/*": {"origins": "*"}},
-    supports_credentials=True
-=======
-# ✅ GLOBAL CORS
+# ✅ GLOBAL CORS (THIS FIXES ALL PREFLIGHT ISSUES)
 CORS(
     app,
     resources={r"/*": {
@@ -30,12 +20,12 @@ CORS(
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 )
 
-# ✅ ONLY PUBLIC BLUEPRINTS
+# ✅ BLUEPRINTS
 app.register_blueprint(owner_bp, url_prefix="/owner")
 app.register_blueprint(mechanic_bp, url_prefix="/mechanic")
+app.register_blueprint(admin_bp, url_prefix="/admin")
 
 @app.route("/")
 def health():

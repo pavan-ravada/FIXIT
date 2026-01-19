@@ -12,66 +12,6 @@
 
 body{
   min-height:100vh;
-<<<<<<< HEAD
-  background:linear-gradient(135deg,#0f172a,#1e293b,#0f172a);
-  font-family:'Inter',sans-serif;
-  color:#fff;
-  display:flex;
-  flex-direction:column;
-  overflow-y: auto;
-}
-
-body::before{
-  content:'';
-  position:fixed;
-  inset:-50%;
-  background:
-    radial-gradient(circle at 20% 50%, rgba(251,146,60,.12), transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(59,130,246,.12), transparent 50%);
-  animation:drift 20s ease-in-out infinite;
-  pointer-events:none;
-}
-
-@keyframes drift{
-  0%,100%{transform:translate(0,0)}
-  50%{transform:translate(30px,-30px)}
-}
-
-/* NAVBAR */
-.navbar{
-  padding:18px 40px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:rgba(15,23,42,.85);
-  backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(255,255,255,.1);
-}
-
-.logo{
-  font-size:1.5rem;
-  font-weight:800;
-  background:linear-gradient(135deg,#fff,#fb923c);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  cursor:pointer;
-}
-.logo::before{content:"🔧 ";}
-
-/* PROFILE */
-.profile{position:relative}
-#profileIcon{
-  width:44px;height:44px;
-  border-radius:50%;
-  border:2px solid #fb923c;
-  background:rgba(251,146,60,.1);
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-=======
   background:#f9fafb;
   font-family:'Inter',sans-serif;
   color:#111827;
@@ -110,37 +50,10 @@ body::before{
 }
 
 /* DROPDOWN */
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 .dropdown{
   display:none;
   position:absolute;
   right:0;
-<<<<<<< HEAD
-  top:58px;
-  background:rgba(30,41,59,.95);
-  border-radius:14px;
-  min-width:160px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
-}
-.dropdown.active{display:block}
-.dropdown p{
-  padding:14px 18px;
-  cursor:pointer;
-  color:#cbd5e1;
-}
-.dropdown p:hover{
-  background:rgba(251,146,60,.15);
-  color:#fb923c;
-}
-
-/* PAGE */
-.dashboard-container{
-  flex:1;
-  max-width:1300px;
-  width:100%;
-  margin:0 auto;
-  padding:32px 48px 48px;
-=======
   top:48px;
   background:#ffffff;
   border-radius:14px;
@@ -165,27 +78,10 @@ body::before{
   width:100%;
   margin:0 auto;
   padding:32px 20px 40px;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 
 h2{
   text-align:center;
-<<<<<<< HEAD
-  font-size:2.1rem;
-  margin-bottom:24px;
-  background:linear-gradient(135deg,#fff,#fb923c);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-/* STATUS */
-.status-card{
-  background:linear-gradient(135deg,rgba(30,41,59,.85),rgba(51,65,85,.85));
-  border-radius:18px;
-  padding:20px 24px;
-  border:1px solid rgba(255,255,255,.1);
-  box-shadow:0 8px 26px rgba(0,0,0,.3);
-=======
   font-size:1.9rem;
   font-weight:700;
   margin-bottom:28px;
@@ -197,29 +93,10 @@ h2{
   border:1px solid #e5e7eb;
   border-radius:18px;
   padding:20px 22px;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   margin-bottom:22px;
 }
 
 .status-card p{
-<<<<<<< HEAD
-  color:#cbd5e1;
-  margin-bottom:6px;
-  font-size:1rem;
-}
-
-/* MAP */
-#map{
-  width:100%;
-  height:420px;
-  border-radius:20px;
-  border:2px solid rgba(255,255,255,.1);
-  box-shadow:0 14px 36px rgba(0,0,0,.35);
-  margin-bottom:22px;
-}
-
-/* ROUTE */
-=======
   font-size:.95rem;
   margin-bottom:6px;
 }
@@ -244,60 +121,28 @@ h2{
 }
 
 /* ================= ROUTE CARD ================= */
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 .route-card{
   display:flex;
   justify-content:space-between;
   align-items:center;
-<<<<<<< HEAD
-  gap:18px;
-  flex-wrap:wrap;
-  background:rgba(15,23,42,.7);
-  border-radius:18px;
-  padding:18px 22px;
-  border:1px solid rgba(255,255,255,.1);
-=======
   gap:16px;
   flex-wrap:wrap;
   background:#ffffff;
   border-radius:18px;
   padding:18px 22px;
   border:1px solid #e5e7eb;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   margin-bottom:22px;
 }
 
 .route-card p{
-<<<<<<< HEAD
-  color:#cbd5e1;
-  font-size:1rem;
-=======
   font-size:.95rem;
   color:#374151;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 
 #openGoogleMapsBtn{
   padding:12px 20px;
   border-radius:14px;
   border:none;
-<<<<<<< HEAD
-  background:linear-gradient(135deg,#fb923c,#f97316);
-  color:#fff;
-  font-weight:600;
-  cursor:pointer;
-}
-
-/* OTP */
-.otp-box{
-  padding:18px;
-  border-radius:18px;
-  background:rgba(34,197,94,.15);
-  border:2px solid rgba(34,197,94,.4);
-  text-align:center;
-  margin-bottom:20px;
-  display:none;
-=======
   background:#000000;
   color:#ffffff;
   font-weight:600;
@@ -322,7 +167,6 @@ h2{
   margin-bottom:20px;
   display:none;
   animation:pulse 1.8s ease-in-out infinite;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 
 .otp-box span{
@@ -330,14 +174,6 @@ h2{
   font-size:32px;
   font-weight:800;
   letter-spacing:6px;
-<<<<<<< HEAD
-  color:#22c55e;
-}
-
-/* MOBILE */
-@media(max-width:768px){
-  #map{height:280px}
-=======
   color:#16a34a;
 }
 
@@ -349,7 +185,6 @@ h2{
 /* ================= MOBILE ================= */
 @media(max-width:768px){
   #map{height:260px}
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   .dashboard-container{padding:20px 16px 32px}
 }
 </style>
@@ -373,24 +208,6 @@ h2{
 <div class="dashboard-container">
   <h2>Active Job</h2>
 
-<<<<<<< HEAD
-  <div class="status-card">
-    <p><strong>Status:</strong> <span id="statusText">Loading...</span></p>
-    <p id="ownerInfo"></p>
-  </div>
-
-  <div id="map"></div>
-
-  <div class="route-card">
-    <p id="routeDistance">Distance: --</p>
-    <p id="routeDuration">ETA: --</p>
-    <button id="openGoogleMapsBtn">Open in Google Maps</button>
-  </div>
-
-  <!-- ✅ OTP BOX -->
-  <div class="otp-box" id="otpBox">
-    OTP
-=======
   <!-- STATUS -->
   <div class="status-card">
     <p><strong>Status:</strong> <span id="statusText">Loading...</span></p>
@@ -417,28 +234,12 @@ h2{
   <!-- OTP -->
   <div class="otp-box" id="otpBox">
     Share this OTP with the owner
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     <span id="otpValue">----</span>
   </div>
 
   <p id="message"></p>
 </div>
 
-<<<<<<< HEAD
-<!-- GOOGLE MAPS (NO CALLBACK ❗) -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry" async defer></script>
-
-<!-- UI -->
-<script>
-document.getElementById("logo").onclick=()=>location.href="./mechanic-dashboard.html";
-
-const p=document.getElementById("profileIcon");
-const m=document.getElementById("profileMenu");
-p.onclick=e=>{e.stopPropagation();m.classList.toggle("active")}
-document.addEventListener("click",()=>m.classList.remove("active"));
-</script>
-
-=======
 <!-- GOOGLE MAPS -->
  <script
   src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry&loading=async&callback=onGoogleMapsReady"
@@ -463,7 +264,6 @@ document.addEventListener("click",()=>m.classList.remove("active"));
   };
 </script>
 
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 <!-- LOGIC -->
 <script type="module" src="./mechanic-active-job.js"></script>
 

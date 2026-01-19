@@ -4,7 +4,7 @@ import { apiGet, apiPost } from "../js/api.js";
 const MIN_MOVE_METERS = 5;
 const ROUTE_RECALC_METERS = 60;
 
-const DEMO_MODE = false;
+const DEMO_MODE = flase;
 
 const MOCK_MECH_LOCATION = {
   lat: 12.9716,   // Bengaluru
@@ -28,8 +28,6 @@ const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
 const historyBtn = document.getElementById("historyBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-<<<<<<< HEAD
-=======
 // 🔒 Disable Open in Google Maps initially (MOBILE SAFE)
 openGoogleMapsBtn.classList.add("disabled");
 openGoogleMapsBtn.style.pointerEvents = "none";
@@ -68,7 +66,6 @@ openGoogleMapsBtn.addEventListener("click", () => {
   }
 });
 
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 /* ================= MAP STATE ================= */
 let map = null;
 let ownerMarker = null;
@@ -84,22 +81,6 @@ let mapInitStarted = false;
 let trackingStarted = false;
 let routeDrawn = false;
 
-<<<<<<< HEAD
-/* ================= OPEN IN GOOGLE MAPS ================= */
-openGoogleMapsBtn?.addEventListener("click", () => {
-  if (!ownerLoc || !mechLoc) return;
-
-  window.location.href =
-    `https://www.google.com/maps/dir/?api=1` +
-    `&origin=${mechLoc.lat},${mechLoc.lng}` +
-    `&destination=${ownerLoc.lat},${ownerLoc.lng}` +
-    `&travelmode=driving`;
-});
-
-/* ================= MAP INIT ================= */
-function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  if (!window.google || map) return;
-=======
 let googleMapsReady = false;
 
 let trackingInterval = null;
@@ -125,7 +106,6 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   }
 
   if (!window.google || !window.google.maps || map) return;
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: mechLat, lng: mechLng },
@@ -161,8 +141,6 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
 
   drawRoute(mechLat, mechLng, ownerLat, ownerLng);
   routeDrawn = true;
-<<<<<<< HEAD
-=======
 
   setTimeout(() => {
     if (!map) return;
@@ -170,7 +148,6 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     google.maps.event.trigger(map, "resize");
     map.setCenter(mechanicMarker.getPosition());
   }, 300);
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 
 /* ================= ROUTE ================= */
@@ -193,14 +170,11 @@ function drawRoute(mlat, mlng, olat, olng) {
         `Distance: ${leg.distance.text}`;
       document.getElementById("routeDuration").innerText =
         `ETA: ${leg.duration.text}`;
-<<<<<<< HEAD
-=======
 
       // 🔥🔥🔥 ONLY PLACE TO ENABLE BUTTON (MOBILE SAFE)
       openGoogleMapsBtn.classList.remove("disabled");
       openGoogleMapsBtn.style.pointerEvents = "auto";
       openGoogleMapsBtn.style.opacity = "1";
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     }
   );
 }
@@ -209,11 +183,7 @@ function drawRoute(mlat, mlng, olat, olng) {
 function updateMechanicMarker(lat, lng) {
   if (!map || !mechanicMarker) return;
   mechanicMarker.setPosition({ lat, lng });
-<<<<<<< HEAD
-  map.panTo({ lat, lng });
-=======
   //map.panTo({ lat, lng });
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 }
 
 /* ================= FETCH JOB ================= */
@@ -224,10 +194,7 @@ async function fetchJob() {
 
   /* 🔴 JOB FINISHED STATES */
   if (data.status === "COMPLETED") {
-<<<<<<< HEAD
-=======
     stopLiveTracking();
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
     localStorage.removeItem("activeRequestId");
     localStorage.removeItem("activeOtp");
     window.location.replace("./mechanic-dashboard.html");
@@ -258,20 +225,12 @@ async function fetchJob() {
 
   ownerLoc = data.ownerLocation || ownerLoc;
 
-<<<<<<< HEAD
-  /* ✅ MAP INIT USING BROWSER GPS (NOT FIRESTORE) */
-=======
   /* ✅ MAP INIT */
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   if (ownerLoc && !mapInitStarted) {
     mapInitStarted = true;
 
     if (DEMO_MODE) {
-<<<<<<< HEAD
-      // 🧪 DEMO LOCATION (NO GPS)
-=======
       // 🧪 DEMO LOCATION
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       mechLoc = { ...MOCK_MECH_LOCATION };
 
       initMap(
@@ -281,13 +240,8 @@ async function fetchJob() {
         mechLoc.lng
       );
 
-<<<<<<< HEAD
-      // Send initial demo location to backend
-      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
-=======
       sendMechanicLocation(mechLoc.lat, mechLoc.lng);
       // ✅ ENABLE BUTTON HERE
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
     } else {
       // 📍 REAL GPS MODE
@@ -304,11 +258,8 @@ async function fetchJob() {
             lat,
             lng
           );
-<<<<<<< HEAD
-=======
 
           // ✅ ENABLE BUTTON HERE
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
         },
         err => {
           console.error("GPS error", err);
@@ -319,11 +270,7 @@ async function fetchJob() {
     }
   }
 
-<<<<<<< HEAD
-  /* 🔁 UPDATE FROM FIRESTORE IF AVAILABLE */
-=======
   /* 🔁 UPDATE FROM FIRESTORE */
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   if (data.mechanicLocation && map) {
     mechLoc = data.mechanicLocation;
     updateMechanicMarker(
@@ -349,11 +296,7 @@ function startLiveTracking() {
 
   if (DEMO_MODE) {
     // 🔁 Simulate movement every 3 seconds
-<<<<<<< HEAD
-    setInterval(() => {
-=======
     trackingInterval = setInterval(() => {
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       mechLoc.lat += 0.00005;
       mechLoc.lng += 0.00005;
 

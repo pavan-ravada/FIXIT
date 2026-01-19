@@ -22,23 +22,6 @@ let mapsReady = false;
 
 let finalTimeoutReached = false;
 
-<<<<<<< HEAD
-function distanceMeters(a, b) {
-  if (!google.maps.geometry) return Infinity;
-
-  return google.maps.geometry.spherical.computeDistanceBetween(
-    new google.maps.LatLng(a.lat, a.lng),
-    new google.maps.LatLng(b.lat, b.lng)
-  );
-}
-
-/* ================= GOOGLE MAP SAFE LOADER ================= */
-function waitForGoogleMaps(cb) {
-  if (window.google && google.maps) cb();
-  else setTimeout(() => waitForGoogleMaps(cb), 200);
-}
-
-=======
 let otpErrorVisible = false;
 
 function distanceMeters(a, b) {
@@ -56,7 +39,6 @@ function waitForGoogleMaps(cb) {
   else setTimeout(() => waitForGoogleMaps(cb), 200);
 }
 
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 /* ================= MAP INIT ================= */
 function initMap(ownerLat, ownerLng) {
   waitForGoogleMaps(() => {
@@ -202,8 +184,6 @@ function drawRoute(mechLat, mechLng, ownerLat, ownerLng) {
   );
 }
 
-<<<<<<< HEAD
-=======
 function showOtpSection(show) {
   const otpSection = document.getElementById("otpSection");
   if (!otpSection) return;
@@ -220,7 +200,6 @@ function showOtpSection(show) {
   }
 }
 
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 /* ================= RADIUS TIMER (SEARCHING ONLY) ================= */
 function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
   const radiusEl = document.getElementById("radiusText");
@@ -273,8 +252,6 @@ function updateRadiusUI(radiusKm, timeoutAt, createdAt) {
 
 /* ================= MAIN ================= */
 document.addEventListener("DOMContentLoaded", () => {
-<<<<<<< HEAD
-=======
 
   function startPolling() {
     if (statusInterval || isNavigatingAway) return;
@@ -288,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusInterval = null;
     }
   }
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   /* ================= NAVBAR ================= */
   const logo = document.getElementById("logo");
   const profileIcon = document.getElementById("profileIcon");
@@ -346,10 +322,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.status === "TIMEOUT") {
         finalTimeoutReached = true;
 
-<<<<<<< HEAD
-        // Status
-        if (statusTextEl) statusTextEl.innerText = "TIMEOUT";
-=======
         // 🛑 STOP calm text rotation
         if (window.calmInterval) {
           clearInterval(window.calmInterval);
@@ -379,18 +351,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusCard) {
           statusCard.style.animation = "none";
         }
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
         // Radius UI
         const radiusText = document.getElementById("radiusText");
         const timerText = document.getElementById("timerText");
-<<<<<<< HEAD
-        if (radiusText) radiusText.innerText = "❌ No mechanic found";
-        if (timerText) timerText.innerText = "Request timed out";
-=======
         if (radiusText) radiusText.textContent = "❌ No mechanic found";
         if (timerText) timerText.textContent = "Request timed out";
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
         // Buttons
         const cancelBtn = document.getElementById("cancelBtn");
@@ -400,18 +366,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (completeBtn) completeBtn.style.display = "none";
 
         const otpSection = document.getElementById("otpSection");
-<<<<<<< HEAD
-        if (otpSection) otpSection.style.display = "none";
-
-        // Stop timers
-        if (window.radiusInterval) clearInterval(window.radiusInterval);
-        clearInterval(statusInterval);
-=======
 
         // Stop timers
         if (window.radiusInterval) clearInterval(window.radiusInterval);
         stopPolling();
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
         isNavigatingAway = true;
         return; // ⛔ HARD STOP — NOTHING AFTER THIS
@@ -445,10 +403,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (completeBtn) completeBtn.style.display = "none";
 
         const otpSection = document.getElementById("otpSection");
-<<<<<<< HEAD
-        if (otpSection) otpSection.style.display = "none";
-=======
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
         return; // 🔴 DO NOT TRACK MECHANIC
       } else {
@@ -483,30 +437,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (distanceText) distanceText.innerText = "📍 Nearby";
           }
         }
-<<<<<<< HEAD
-      }
-
-      /* ================= BUTTONS ================= */
-      const cancelBtn = document.getElementById("cancelBtn");
-      const completeBtn = document.getElementById("completeBtn");
-      const otpSection = document.getElementById("otpSection");
-
-      if (cancelBtn) {
-        cancelBtn.style.display =
-          data.status === "SEARCHING" || data.status === "ACCEPTED"
-            ? "block"
-            : "none";
-      }
-
-      if (completeBtn) {
-        completeBtn.style.display =
-          data.status === "IN_PROGRESS" ? "block" : "none";
-      }
-
-      if (otpSection) {
-        otpSection.style.display =
-          data.status === "ACCEPTED" ? "block" : "none";
-=======
       }
 
       /* ================= BUTTONS ================= */
@@ -534,7 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showOtpSection(true);
       } else {
         showOtpSection(data.status === "ACCEPTED");
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       }
 
     } catch (err) {
@@ -549,18 +478,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ================= OTP ================= */
   document.getElementById("verifyOtpBtn")?.addEventListener("click", async () => {
-<<<<<<< HEAD
-    const otp = document.getElementById("otpInput").value.trim();
-    const messageEl = document.getElementById("message");
-
-    messageEl.textContent = "";
-    messageEl.style.background = "none";
-    messageEl.style.color = "";
-=======
     const otpInput = document.getElementById("otpInput");
     const otp = otpInput ? otpInput.value.trim() : "";
     const messageEl = document.getElementById("otpMessage");
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
     if (!messageEl) return;
 
@@ -572,12 +492,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!otp) {
       messageEl.textContent = "Please enter OTP";
       messageEl.style.background = "rgba(239,68,68,0.15)";
-<<<<<<< HEAD
-      messageEl.style.color = "#fca5a5";
-=======
       messageEl.style.color = "#dc2626";
       messageEl.style.display = "block";
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
       return;
     }
 
@@ -587,20 +503,6 @@ document.addEventListener("DOMContentLoaded", () => {
         otp,
       });
 
-<<<<<<< HEAD
-      messageEl.textContent = "OTP verified successfully";
-      messageEl.style.background = "rgba(34,197,94,0.2)";
-      messageEl.style.color = "#4ade80";
-
-      fetchStatus();
-
-    } catch (err) {
-      // 🔥 THIS IS THE IMPORTANT PART
-      messageEl.textContent = err.message || "Invalid OTP";
-      messageEl.style.background = "rgba(239,68,68,0.15)";
-      messageEl.style.color = "#fca5a5";
-    }
-=======
       otpErrorVisible = false;               // 🔓 UNLOCK UI
 
       messageEl.textContent = "OTP verified successfully";
@@ -634,17 +536,12 @@ document.addEventListener("DOMContentLoaded", () => {
           messageEl.style.opacity = "1";
         });
       }
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
   });
 
   /* ================= CANCEL ================= */
   document.getElementById("cancelBtn")?.addEventListener("click", async () => {
     isNavigatingAway = true;
-<<<<<<< HEAD
-    clearInterval(statusInterval);
-=======
     stopPolling();
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
     await apiPost(`/owner/request/cancel/${requestId}`, {
       phone: owner.phone,
@@ -657,11 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================= COMPLETE ================= */
   document.getElementById("completeBtn")?.addEventListener("click", async () => {
     isNavigatingAway = true;
-<<<<<<< HEAD
-    clearInterval(statusInterval);
-=======
     stopPolling();
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 
     await apiPost(`/owner/complete/${requestId}`, {
       owner_phone: owner.phone,
@@ -673,9 +566,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   fetchStatus();
-<<<<<<< HEAD
-  statusInterval = setInterval(fetchStatus, 3000);
-=======
   setTimeout(startPolling, 0);
->>>>>>> e242dfc (Deploy public FIXIT app without admin (admin local only))
 });
