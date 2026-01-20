@@ -385,6 +385,7 @@ async function fetchJob() {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude
         };
+        sendMechanicLocation(mechLoc.lat, mechLoc.lng);
       },
       err => {
         console.error("GPS error", err);
@@ -396,17 +397,6 @@ async function fetchJob() {
 
   // 🔁 SAFE RETRY (KEY LINE)
   tryInitMap();
-
-  /* 🔁 UPDATE FROM FIRESTORE */
-  if (data.mechanicLocation && map && ownerLoc) {
-    const newLoc = data.mechanicLocation;
-
-    // update marker position
-    updateMechanicMarker(newLoc.lat, newLoc.lng);
-
-    // update stored mechanic location AFTER calculations
-    mechLoc = newLoc;
-  }
 }
 
 function distanceMeters(a, b) {
@@ -455,7 +445,7 @@ function startLiveTracking() {
   }
 
   // 🔴 REAL GPS MODE
-  navigator.geolocation.watchPosition(
+  geoWatchId = navigator.geolocation.watchPosition(
     pos => {
       const newLoc = {
         lat: pos.coords.latitude,
@@ -463,21 +453,30 @@ function startLiveTracking() {
       };
 
       // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
-      if (routePath) {
-        const currentLatLng = new google.maps.LatLng(
+
+      // update backend (owner tracking)
+      sendMechanicLocation(newLoc.lat, newLoc.lng);
+
+      if (lastMechLoc) {
+        const from = new google.maps.LatLng(
+          lastMechLoc.lat,
+          lastMechLoc.lng
+        );
+        const to = new google.maps.LatLng(
           newLoc.lat,
           newLoc.lng
         );
 
-        const routeHeading = getRouteHeading(routePath, currentLatLng);
+        const heading = google.maps.geometry.spherical.computeHeading(from, to);
 
-        if (mechLoc) {
-          smoothMoveMarker(mechanicMarker, mechLoc, { lat, lng });
+        if (lastHeading === null) {
+          lastHeading = heading;
+          previousHeading = heading;
+        } else {
+          previousHeading = lastHeading;
+          lastHeading = smoothHeading(lastHeading, heading);
         }
       }
-
-      // update backend (owner tracking)
-      sendMechanicLocation(newLoc.lat, newLoc.lng);
 
       // 🔥 UPDATE MARKER WITH ROTATION
       updateMechanicMarker(
