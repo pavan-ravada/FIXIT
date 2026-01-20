@@ -2,7 +2,6 @@ import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= CONFIG ================= */
 const MIN_MOVE_METERS = 5;
-const ROUTE_RECALC_METERS = 60;
 
 const DEMO_MODE = false;
 
@@ -301,19 +300,11 @@ async function fetchJob() {
     updateMechanicMarker(newLoc.lat, newLoc.lng);
 
     // 🔥 REDRAW ROUTE ONLY IF MOVED ENOUGH
-    if (
-      routeDrawn &&
-      (
-        !mechLoc || 
-        distanceMeters(mechLoc, newLoc) > ROUTE_RECALC_METERS
-      )
-    ) {
-      drawRoute(
-        newLoc.lat,
-        newLoc.lng,
-        ownerLoc.lat,
-        ownerLoc.lng
-      );
+    if (data.mechanicLocation && map && ownerLoc) {
+      const newLoc = data.mechanicLocation;
+
+      updateMechanicMarker(newLoc.lat, newLoc.lng);
+      mechLoc = newLoc; // sync only
     }
 
     // update stored mechanic location AFTER calculations
@@ -369,15 +360,35 @@ function startLiveTracking() {
   // 🔴 REAL GPS MODE
   navigator.geolocation.watchPosition(
     pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const newLoc = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      };
 
-      sendMechanicLocation(lat, lng);
-      updateMechanicMarker(lat, lng);
+      // update backend (for owner)
+      sendMechanicLocation(newLoc.lat, newLoc.lng);
 
-      if (routeDrawn && ownerLoc) {
-        drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
+      // update marker
+      updateMechanicMarker(newLoc.lat, newLoc.lng);
+
+      // 🔥 ROUTE REDRAW HERE (LOCAL GPS ONLY)
+      if (
+        routeDrawn &&
+        ownerLoc &&
+        (
+          !mechLoc ||
+          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS
+        )
+      ) {
+        drawRoute(
+          newLoc.lat,
+          newLoc.lng,
+          ownerLoc.lat,
+          ownerLoc.lng
+        );
       }
+
+      mechLoc = newLoc;
     },
     () => alert("Enable GPS"),
     { enableHighAccuracy: true }
