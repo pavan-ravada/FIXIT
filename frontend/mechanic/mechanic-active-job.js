@@ -19,6 +19,9 @@ if (!mechanic || !requestId) {
 }
 
 /* ================= ELEMENTS ================= */
+
+const MIN_ROTATION_DELTA = 4; // degrees (sweet spot)
+
 const statusText = document.getElementById("statusText");
 const ownerInfo = document.getElementById("ownerInfo");
 const otpBox = document.getElementById("otpBox");
@@ -67,7 +70,6 @@ openGoogleMapsBtn.addEventListener("click", () => {
 
 /* ================= MAP STATE ================= */
 
-const MIN_SPEED_FOR_HEADING = 1.5; // m/s (~5.4 km/h)
 const HEADING_SMOOTH_FACTOR = 0.12; // lower = smoother
 const ROTATION_ANIMATION_MS = 120;
 
@@ -90,6 +92,8 @@ let lastHeading = null;
 let lastMechLoc = null;
 
 let previousHeading = null;
+
+let routePath = null; // ⭐ holds road polyline
 
 function stopLiveTracking() {
   if (trackingInterval) {
@@ -204,6 +208,24 @@ function smoothHeading(prev, next, factor = HEADING_SMOOTH_FACTOR) {
   return (prev + delta * factor + 360) % 360;
 }
 
+function smoothMoveMarker(marker, from, to) {
+  const start = performance.now();
+  const DURATION = 300;
+
+  function frame(now) {
+    const t = Math.min((now - start) / DURATION, 1);
+
+    const lat = from.lat + (to.lat - from.lat) * t;
+    const lng = from.lng + (to.lng - from.lng) * t;
+
+    marker.setPosition({ lat, lng });
+
+    if (t < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
 function animateRotation(marker, from, to) {
   const start = performance.now();
 
@@ -232,19 +254,23 @@ function animateRotation(marker, from, to) {
   requestAnimationFrame(frame);
 }
 
-function calculateHeading(from, to) {
-  const lat1 = from.lat * Math.PI / 180;
-  const lat2 = to.lat * Math.PI / 180;
-  const dLng = (to.lng - from.lng) * Math.PI / 180;
+function getRouteHeading(routePath, currentLatLng) {
+  if (!routePath || routePath.length < 2) return null;
 
-  const y = Math.sin(dLng) * Math.cos(lat2);
-  const x =
-    Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  for (let i = 0; i < routePath.length - 1; i++) {
+    const p1 = routePath[i];
+    const p2 = routePath[i + 1];
 
-  let brng = Math.atan2(y, x);
-  brng = brng * 180 / Math.PI;
-  return (brng + 360) % 360;
+    const dist = google.maps.geometry.spherical.computeDistanceBetween(
+      currentLatLng,
+      p1
+    );
+
+    if (dist < 25) { // look ahead ~25m
+      return google.maps.geometry.spherical.computeHeading(p1, p2);
+    }
+  }
+  return null;
 }
 
 /* ================= ROUTE ================= */
@@ -261,6 +287,7 @@ function drawRoute(mlat, mlng, olat, olng) {
       if (status !== "OK") return;
 
       directionsRenderer.setDirections(res);
+      routePath = res.routes[0].overview_path; // ⭐ STORE ROAD
       const leg = res.routes[0].legs[0];
 
       document.getElementById("routeDistance").innerText =
@@ -280,7 +307,15 @@ function drawRoute(mlat, mlng, olat, olng) {
 function updateMechanicMarker(lat, lng, heading = null) {
   if (!map || !mechanicMarker) return;
 
-  mechanicMarker.setPosition({ lat, lng });
+  if (mechLoc) {
+    smoothMoveMarker(
+      mechanicMarker,
+      mechLoc,
+      { lat, lng }
+    );
+  } else {
+    mechanicMarker.setPosition({ lat, lng });
+  }
 
   if (
     heading !== null &&
@@ -428,26 +463,16 @@ function startLiveTracking() {
       };
 
       // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
-      let heading = null;
+      if (routePath) {
+        const currentLatLng = new google.maps.LatLng(
+          newLoc.lat,
+          newLoc.lng
+        );
 
-      // ✅ Use GPS heading ONLY if speed is enough
-      if (pos.coords.speed !== null && pos.coords.speed > MIN_SPEED_FOR_HEADING) {
-        heading = pos.coords.heading;
-      }
+        const routeHeading = getRouteHeading(routePath, currentLatLng);
 
-      // 🔁 fallback to calculated heading
-      if (heading === null && lastMechLoc) {
-        heading = calculateHeading(lastMechLoc, newLoc);
-      }
-
-      // 🎯 smooth it
-      if (heading !== null) {
-        if (lastHeading === null) {
-          lastHeading = heading;          // bootstrap
-          previousHeading = heading;
-        } else {
-          previousHeading = lastHeading;
-          lastHeading = smoothHeading(lastHeading, heading);
+        if (mechLoc) {
+          smoothMoveMarker(mechanicMarker, mechLoc, { lat, lng });
         }
       }
 
