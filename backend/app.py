@@ -1,22 +1,23 @@
 from flask import Flask
-import os
 from flask_cors import CORS
+import os
 
 from routes.owner import owner_bp
 from routes.mechanic import mechanic_bp
 
 app = Flask(__name__)
 
-# ✅ GLOBAL CORS (THIS FIXES ALL PREFLIGHT ISSUES)
+# ✅ FIXED CORS (NEW NETLIFY DOMAIN + RENDER)
 CORS(
     app,
     resources={r"/*": {
         "origins": [
             "http://localhost:5001",
+            "http://localhost:5000",
             "https://stellar-blancmange-5a0020.netlify.app"
         ]
     }},
-    supports_credentials=True,
+    supports_credentials=False,   # 🔥 IMPORTANT
     allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 )
