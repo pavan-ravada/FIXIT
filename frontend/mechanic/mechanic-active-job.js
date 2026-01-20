@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= CONFIG ================= */
-const MIN_MOVE_METERS = 5;
+const MIN_MOVE_METERS = 2;
 
 const DEMO_MODE = false;
 
@@ -70,8 +70,8 @@ openGoogleMapsBtn.addEventListener("click", () => {
 
 /* ================= MAP STATE ================= */
 
-const HEADING_SMOOTH_FACTOR = 0.12; // lower = smoother
-const ROTATION_ANIMATION_MS = 120;
+const HEADING_SMOOTH_FACTOR = 0.10; // lower = smoother
+const ROTATION_ANIMATION_MS = 90;
 
 
 let map = null;
@@ -159,7 +159,11 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map: map,
-    suppressMarkers: true
+    suppressMarkers: true,
+    preserveViewport: true,
+    polylineOptions: {
+      strokeOpacity: 1.0
+    }
   });
 
   /* ================= OWNER MARKER ================= */
@@ -277,28 +281,27 @@ function getRouteHeading(routePath, currentLatLng) {
 function drawRoute(mlat, mlng, olat, olng) {
   if (!directionsService || !directionsRenderer) return;
 
+  // 🔥 HARD RESET OLD ROUTE (THIS IS THE KEY)
+  directionsRenderer.setDirections({ routes: [] });
+
   directionsService.route(
     {
       origin: { lat: mlat, lng: mlng },
       destination: { lat: olat, lng: olng },
-      travelMode: "DRIVING"
+      travelMode: "DRIVING",
+      provideRouteAlternatives: false
     },
     (res, status) => {
       if (status !== "OK") return;
 
       directionsRenderer.setDirections(res);
-      routePath = res.routes[0].overview_path; // ⭐ STORE ROAD
-      const leg = res.routes[0].legs[0];
+      routePath = res.routes[0].overview_path;
 
+      const leg = res.routes[0].legs[0];
       document.getElementById("routeDistance").innerText =
         `Distance: ${leg.distance.text}`;
       document.getElementById("routeDuration").innerText =
         `ETA: ${leg.duration.text}`;
-
-      // 🔥🔥🔥 ONLY PLACE TO ENABLE BUTTON (MOBILE SAFE)
-      openGoogleMapsBtn.classList.remove("disabled");
-      openGoogleMapsBtn.style.pointerEvents = "auto";
-      openGoogleMapsBtn.style.opacity = "1";
     }
   );
 }
@@ -491,7 +494,8 @@ function startLiveTracking() {
         ownerLoc &&
         (
           !mechLoc ||
-          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS
+          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS &&
+          Math.abs(lastHeading ?? 0) > 1
         )
       ) {
         drawRoute(
