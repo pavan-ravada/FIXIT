@@ -283,7 +283,7 @@ function getRouteHeading(routePath, currentLatLng) {
 function drawRoute(mlat, mlng, olat, olng) {
   if (!directionsService || !directionsRenderer) return;
 
-  // 🔥 HARD RESET OLD ROUTE (THIS IS THE KEY)
+  // 🔥 HARD RESET OLD ROUTE (REMOVES STALE / BLACK ROUTES)
   directionsRenderer.setDirections({ routes: [] });
 
   directionsService.route(
@@ -296,14 +296,22 @@ function drawRoute(mlat, mlng, olat, olng) {
     (res, status) => {
       if (status !== "OK") return;
 
+      // ✅ DRAW NEW ROUTE
       directionsRenderer.setDirections(res);
       routePath = res.routes[0].overview_path;
 
       const leg = res.routes[0].legs[0];
+
       document.getElementById("routeDistance").innerText =
         `Distance: ${leg.distance.text}`;
+
       document.getElementById("routeDuration").innerText =
         `ETA: ${leg.duration.text}`;
+
+      // ✅ ENABLE OPEN IN GOOGLE MAPS BUTTON
+      openGoogleMapsBtn.classList.remove("disabled");
+      openGoogleMapsBtn.style.pointerEvents = "auto";
+      openGoogleMapsBtn.style.opacity = "1";
     }
   );
 }
