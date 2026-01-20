@@ -13,7 +13,7 @@ CORS(
     resources={r"/*": {
         "origins": [
             "http://localhost:5001",
-            "https://chimerical-dasik-6feae3.netlify.app"
+            "https://stellar-blancmange-5a0020.netlify.app"
         ]
     }},
     supports_credentials=True,
