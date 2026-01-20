@@ -66,6 +66,12 @@ openGoogleMapsBtn.addEventListener("click", () => {
 });
 
 /* ================= MAP STATE ================= */
+
+const MIN_SPEED_FOR_HEADING = 1.5; // m/s (~5.4 km/h)
+const HEADING_SMOOTH_FACTOR = 0.12; // lower = smoother
+const ROTATION_ANIMATION_MS = 120;
+
+
 let map = null;
 let ownerMarker = null;
 let mechanicMarker = null;
@@ -82,6 +88,8 @@ let geoWatchId = null;
 
 let lastHeading = null;
 let lastMechLoc = null;
+
+let previousHeading = null;
 
 function stopLiveTracking() {
   if (trackingInterval) {
@@ -185,16 +193,43 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   }, 300);
 }
 
-function smoothHeading(prev, next, factor = 0.25) {
+function smoothHeading(prev, next, factor = HEADING_SMOOTH_FACTOR) {
   if (prev === null) return next;
 
   let delta = next - prev;
 
-  // Handle 360° wrap-around
   if (delta > 180) delta -= 360;
   if (delta < -180) delta += 360;
 
   return (prev + delta * factor + 360) % 360;
+}
+
+function animateRotation(marker, from, to) {
+  const start = performance.now();
+
+  function frame(now) {
+    const t = Math.min((now - start) / ROTATION_ANIMATION_MS, 1);
+    const eased = t * (2 - t); // ease-out
+
+    let delta = to - from;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    const angle = (from + delta * eased + 360) % 360;
+
+    marker.setIcon({
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 6,
+      rotation: angle,
+      fillColor: "#1A73E8",
+      fillOpacity: 1,
+      strokeWeight: 2
+    });
+
+    if (t < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 }
 
 function calculateHeading(from, to) {
@@ -247,15 +282,12 @@ function updateMechanicMarker(lat, lng, heading = null) {
 
   mechanicMarker.setPosition({ lat, lng });
 
-  if (heading !== null) {
-    mechanicMarker.setIcon({
-      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      scale: 6,
-      rotation: heading,
-      fillColor: "#1A73E8",
-      fillOpacity: 1,
-      strokeWeight: 2
-    });
+  if (
+    heading !== null &&
+    previousHeading !== null &&
+    lastHeading !== null
+  ) {
+    animateRotation(mechanicMarker, previousHeading, lastHeading);
   }
 }
 
@@ -396,15 +428,27 @@ function startLiveTracking() {
       };
 
       // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
-      let heading = pos.coords.heading;
+      let heading = null;
 
-      // 🔁 2️⃣ FALLBACK: calculate heading manually
+      // ✅ Use GPS heading ONLY if speed is enough
+      if (pos.coords.speed !== null && pos.coords.speed > MIN_SPEED_FOR_HEADING) {
+        heading = pos.coords.heading;
+      }
+
+      // 🔁 fallback to calculated heading
       if (heading === null && lastMechLoc) {
         heading = calculateHeading(lastMechLoc, newLoc);
       }
 
+      // 🎯 smooth it
       if (heading !== null) {
-        lastHeading = smoothHeading(lastHeading, heading);
+        if (lastHeading === null) {
+          lastHeading = heading;          // bootstrap
+          previousHeading = heading;
+        } else {
+          previousHeading = lastHeading;
+          lastHeading = smoothHeading(lastHeading, heading);
+        }
       }
 
       // update backend (owner tracking)
