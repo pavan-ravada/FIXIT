@@ -248,7 +248,7 @@ function animateRotation(marker, from, to) {
     marker.setIcon({
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: 6,
-      rotation: 0,
+      rotation: angle,
       fillColor: "#1A73E8",
       fillOpacity: 1,
       strokeWeight: 2
@@ -465,9 +465,13 @@ function startLiveTracking() {
         lng: pos.coords.longitude
       };
 
+      // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
+
+      // update backend (owner tracking)
+      // 🔥 1️⃣ GET HEADING (FAST & ACCURATE)
       let rawHeading = null;
 
-      // ✅ BEST: device compass (instant turning)
+      // ✅ BEST: device compass heading (instant turn)
       if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
         rawHeading = pos.coords.heading;
       }
@@ -486,7 +490,7 @@ function startLiveTracking() {
         rawHeading = google.maps.geometry.spherical.computeHeading(from, to);
       }
 
-      // ✅ SMOOTH HEADING (ONLY ONCE)
+      // ✅ SMOOTHING (CRITICAL)
       if (rawHeading !== null) {
         if (lastHeading === null) {
           lastHeading = rawHeading;
@@ -497,12 +501,7 @@ function startLiveTracking() {
         }
       }
 
-      // 🔥 ROTATE MAP (THIS MAKES ARROW FACE TOP)
-      if (lastHeading !== null && map) {
-        map.setHeading(lastHeading);
-      }
-
-      // 🔥 UPDATE MARKER
+      // 🔥 UPDATE MARKER WITH ROTATION
       updateMechanicMarker(
         newLoc.lat,
         newLoc.lng,
@@ -515,7 +514,8 @@ function startLiveTracking() {
         ownerLoc &&
         (
           !mechLoc ||
-          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS
+          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS &&
+          Math.abs(lastHeading ?? 0) > 1
         )
       ) {
         drawRoute(
