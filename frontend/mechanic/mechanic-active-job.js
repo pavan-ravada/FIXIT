@@ -162,7 +162,9 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     suppressMarkers: true,
     preserveViewport: true,
     polylineOptions: {
-      strokeOpacity: 1.0
+      strokeColor: "#4285F4",
+      strokeOpacity: 1.0,
+      strokeWeight: 6
     }
   });
 
