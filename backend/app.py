@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 import os
 
@@ -7,20 +7,25 @@ from routes.mechanic import mechanic_bp
 
 app = Flask(__name__)
 
-# ✅ FIXED CORS (NEW NETLIFY DOMAIN + RENDER)
+# ✅ HARD CORS FIX (NO GUESSING, NO REDEPLOY LOOP)
 CORS(
     app,
-    resources={r"/*": {
-        "origins": [
-            "http://localhost:5001",
-            "http://localhost:5000",
-            "https://stellar-blancmange-5a0020.netlify.app"
-        ]
-    }},
-    supports_credentials=False,   # 🔥 IMPORTANT
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=False
 )
+
+# ✅ FORCE PREFLIGHT RESPONSE (THIS IS THE KEY)
+@app.before_request
+def handle_preflight():
+    if os.environ.get("FLASK_ENV") != "production":
+        pass
+    from flask import request
+    if request.method == "OPTIONS":
+        response = jsonify({})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+        return response, 200
 
 # ✅ BLUEPRINTS
 app.register_blueprint(owner_bp, url_prefix="/owner")
