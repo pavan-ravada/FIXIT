@@ -74,14 +74,14 @@ let directionsRenderer = null;
 
 let ownerLoc = null;
 let mechLoc = null;
-let lastSentLoc = null;
 let trackingStarted = false;
 let routeDrawn = false;
 
-let googleMapsReady = false;
-
 let trackingInterval = null;
 let geoWatchId = null;
+
+let lastHeading = null;
+let lastMechLoc = null;
 
 function stopLiveTracking() {
   if (trackingInterval) {
@@ -185,6 +185,33 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   }, 300);
 }
 
+function smoothHeading(prev, next, factor = 0.25) {
+  if (prev === null) return next;
+
+  let delta = next - prev;
+
+  // Handle 360° wrap-around
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  return (prev + delta * factor + 360) % 360;
+}
+
+function calculateHeading(from, to) {
+  const lat1 = from.lat * Math.PI / 180;
+  const lat2 = to.lat * Math.PI / 180;
+  const dLng = (to.lng - from.lng) * Math.PI / 180;
+
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+
+  let brng = Math.atan2(y, x);
+  brng = brng * 180 / Math.PI;
+  return (brng + 360) % 360;
+}
+
 /* ================= ROUTE ================= */
 function drawRoute(mlat, mlng, olat, olng) {
   if (!directionsService || !directionsRenderer) return;
@@ -215,10 +242,21 @@ function drawRoute(mlat, mlng, olat, olng) {
 }
 
 /* ================= MARKER UPDATE ================= */
-function updateMechanicMarker(lat, lng) {
+function updateMechanicMarker(lat, lng, heading = null) {
   if (!map || !mechanicMarker) return;
+
   mechanicMarker.setPosition({ lat, lng });
-  //map.panTo({ lat, lng });
+
+  if (heading !== null) {
+    mechanicMarker.setIcon({
+      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+      scale: 6,
+      rotation: heading,
+      fillColor: "#1A73E8",
+      fillOpacity: 1,
+      strokeWeight: 2
+    });
+  }
 }
 
 /* ================= FETCH JOB ================= */
@@ -299,14 +337,6 @@ async function fetchJob() {
     // update marker position
     updateMechanicMarker(newLoc.lat, newLoc.lng);
 
-    // 🔥 REDRAW ROUTE ONLY IF MOVED ENOUGH
-    if (data.mechanicLocation && map && ownerLoc) {
-      const newLoc = data.mechanicLocation;
-
-      updateMechanicMarker(newLoc.lat, newLoc.lng);
-      mechLoc = newLoc; // sync only
-    }
-
     // update stored mechanic location AFTER calculations
     mechLoc = newLoc;
   }
@@ -365,13 +395,29 @@ function startLiveTracking() {
         lng: pos.coords.longitude
       };
 
-      // update backend (for owner)
+      // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
+      let heading = pos.coords.heading;
+
+      // 🔁 2️⃣ FALLBACK: calculate heading manually
+      if (heading === null && lastMechLoc) {
+        heading = calculateHeading(lastMechLoc, newLoc);
+      }
+
+      if (heading !== null) {
+        lastHeading = smoothHeading(lastHeading, heading);
+      }
+
+      // update backend (owner tracking)
       sendMechanicLocation(newLoc.lat, newLoc.lng);
 
-      // update marker
-      updateMechanicMarker(newLoc.lat, newLoc.lng);
+      // 🔥 UPDATE MARKER WITH ROTATION
+      updateMechanicMarker(
+        newLoc.lat,
+        newLoc.lng,
+        lastHeading
+      );
 
-      // 🔥 ROUTE REDRAW HERE (LOCAL GPS ONLY)
+      // 🔁 redraw route only if moved
       if (
         routeDrawn &&
         ownerLoc &&
@@ -388,11 +434,14 @@ function startLiveTracking() {
         );
       }
 
+      lastMechLoc = newLoc;
       mechLoc = newLoc;
     },
     () => alert("Enable GPS"),
     { enableHighAccuracy: true }
   );
+
+
 }
 
 /* ================= INIT ================= */
