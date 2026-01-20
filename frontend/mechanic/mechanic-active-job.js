@@ -71,7 +71,7 @@ openGoogleMapsBtn.addEventListener("click", () => {
 /* ================= MAP STATE ================= */
 
 const HEADING_SMOOTH_FACTOR = 0.10; // lower = smoother
-const ROTATION_ANIMATION_MS = 90;
+const ROTATION_ANIMATION_MS = 60;
 
 
 let map = null;
@@ -468,9 +468,16 @@ function startLiveTracking() {
       // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
 
       // update backend (owner tracking)
-      sendMechanicLocation(newLoc.lat, newLoc.lng);
+      // 🔥 1️⃣ GET HEADING (FAST & ACCURATE)
+      let rawHeading = null;
 
-      if (lastMechLoc) {
+      // ✅ BEST: device compass heading (instant turn)
+      if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+        rawHeading = pos.coords.heading;
+      }
+
+      // ✅ FALLBACK: movement-based heading
+      else if (lastMechLoc) {
         const from = new google.maps.LatLng(
           lastMechLoc.lat,
           lastMechLoc.lng
@@ -480,14 +487,17 @@ function startLiveTracking() {
           newLoc.lng
         );
 
-        const heading = google.maps.geometry.spherical.computeHeading(from, to);
+        rawHeading = google.maps.geometry.spherical.computeHeading(from, to);
+      }
 
+      // ✅ SMOOTHING (CRITICAL)
+      if (rawHeading !== null) {
         if (lastHeading === null) {
-          lastHeading = heading;
-          previousHeading = heading;
+          lastHeading = rawHeading;
+          previousHeading = rawHeading;
         } else {
           previousHeading = lastHeading;
-          lastHeading = smoothHeading(lastHeading, heading);
+          lastHeading = smoothHeading(lastHeading, rawHeading, 0.25);
         }
       }
 
