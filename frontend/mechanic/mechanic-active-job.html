@@ -108,27 +108,31 @@ h2{
 }
 
 /* ================= MAP ================= */
-#map{
-  width:100%;
-  min-height: 420px;
-  height:100%;
-  background: #e5e7eb;
-  border-radius:18px;
-  border:1px solid #e5e7eb;
-  margin-bottom:22px;
+.map-wrapper {
   position: relative;
-  z-index: 1;
+  width: 100%;
+  height: 420px;
+  margin-bottom: 22px;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
 }
 
 #fixedArrow {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   transform: translate(-50%, -50%) rotate(0deg);
-  z-index: 1000;
+  z-index: 2000;
   pointer-events: none;
+
+  background-image: url("./arrow.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
 /* ================= ROUTE CARD ================= */
