@@ -1,7 +1,7 @@
 import { apiGet, apiPost } from "../js/api.js";
 
 /* ================= CONFIG ================= */
-const MIN_MOVE_METERS = 2;
+const MIN_MOVE_METERS = 8;
 
 const DEMO_MODE = false;
 
@@ -189,13 +189,13 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
 
   /* ================= MECHANIC MARKER ================= */
   mechanicMarker = new google.maps.Marker({
-    position: { lat: mechLat, lng: mechLng },
+    position: map.getCenter(), // 🔥 LOCK TO CENTER
     map,
     title: "You",
     icon: {
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: 6,
-      rotation: 0,            // 🔥 ALWAYS UP
+      rotation: 0,
       fillColor: "#1A73E8",
       fillOpacity: 1,
       strokeWeight: 2
@@ -211,7 +211,6 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     if (!map || !mechanicMarker) return;
 
     google.maps.event.trigger(map, "resize");
-    map.setCenter(mechanicMarker.getPosition());
   }, 300);
 }
 
@@ -226,40 +225,6 @@ function smoothHeading(prev, next, factor = HEADING_SMOOTH_FACTOR) {
   return (prev + delta * factor + 360) % 360;
 }
 
-function animateNavigationCamera() {
-  if (!map || lastHeading === null) {
-    requestAnimationFrame(animateNavigationCamera);
-    return;
-  }
-
-  // 🔥 Smooth camera rotation
-  cameraHeading = smoothHeading(cameraHeading, lastHeading, 0.15);
-
-  map.moveCamera({
-    heading: cameraHeading,
-    tilt: 45
-  });
-
-  requestAnimationFrame(animateNavigationCamera);
-}
-
-function smoothMoveMarker(marker, from, to) {
-  const start = performance.now();
-  const DURATION = 300;
-
-  function frame(now) {
-    const t = Math.min((now - start) / DURATION, 1);
-
-    const lat = from.lat + (to.lat - from.lat) * t;
-    const lng = from.lng + (to.lng - from.lng) * t;
-
-    marker.setPosition({ lat, lng });
-
-    if (t < 1) requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-}
 
 function getRouteHeading(routePath, currentLatLng) {
   if (!routePath || routePath.length < 2) return null;
@@ -315,21 +280,6 @@ function drawRoute(mlat, mlng, olat, olng) {
       openGoogleMapsBtn.style.opacity = "1";
     }
   );
-}
-
-/* ================= MARKER UPDATE ================= */
-function updateMechanicMarker(lat, lng, heading = null) {
-  if (!map || !mechanicMarker) return;
-
-  if (mechLoc) {
-    smoothMoveMarker(
-      mechanicMarker,
-      mechLoc,
-      { lat, lng }
-    );
-  } else {
-    mechanicMarker.setPosition({ lat, lng });
-  }
 }
 
 /* ================= FETCH JOB ================= */
@@ -429,6 +379,15 @@ function sendMechanicLocation(lat, lng) {
   });
 }
 
+function updateMarkerRotation(heading) {
+  if (!mechanicMarker || heading === null) return;
+
+  const icon = mechanicMarker.getIcon();
+  icon.rotation = heading;
+
+  mechanicMarker.setIcon(icon);
+}
+
 function startLiveTracking() {
   if (trackingStarted) return;
   trackingStarted = true;
@@ -453,6 +412,7 @@ function startLiveTracking() {
   // 🔴 REAL GPS MODE
   geoWatchId = navigator.geolocation.watchPosition(
     pos => {
+      /* ================= LOCATION ================= */
       const newLoc = {
         lat: pos.coords.latitude,
         lng: pos.coords.longitude
@@ -463,14 +423,19 @@ function startLiveTracking() {
       // 🔥 SEND LOCATION TO BACKEND
       sendMechanicLocation(newLoc.lat, newLoc.lng);
 
+      /* ================= HEADING ================= */
       let rawHeading = null;
 
-      // ✅ 1️⃣ COMPASS HEADING (BEST – instant turn)
-      if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && speed > 1.5) {
+      // ✅ 1️⃣ DEVICE COMPASS (FASTEST & MOST RESPONSIVE)
+      if (
+        pos.coords.heading !== null &&
+        !isNaN(pos.coords.heading) &&
+        speed > 1.5
+      ) {
         rawHeading = pos.coords.heading;
       }
 
-      // ✅ 2️⃣ FALLBACK – movement-based heading
+      // ✅ 2️⃣ MOVEMENT-BASED FALLBACK
       else if (lastMechLoc && speed > 1.5) {
         const from = new google.maps.LatLng(
           lastMechLoc.lat,
@@ -481,25 +446,43 @@ function startLiveTracking() {
           newLoc.lng
         );
 
-        rawHeading = google.maps.geometry.spherical.computeHeading(from, to);
+        rawHeading =
+          google.maps.geometry.spherical.computeHeading(from, to);
       }
 
-      // ✅ 3️⃣ SMOOTH HEADING (GOOGLE MAPS STYLE)
+      // ✅ 3️⃣ ROAD-SNAPPED HEADING (GOOGLE MAPS STYLE)
+      const routeHeading = getRouteHeading(
+        routePath,
+        new google.maps.LatLng(newLoc.lat, newLoc.lng)
+      );
+
+      if (routeHeading !== null) {
+        rawHeading = routeHeading;
+      }
+
+      /* ================= SMOOTHING ================= */
       if (rawHeading !== null && shouldUpdateHeading(lastHeading, rawHeading)) {
         if (lastHeading === null) {
           lastHeading = rawHeading;
-
-          // 🔥 INITIALIZE CAMERA HEADING ON FIRST FIX
           cameraHeading = rawHeading;
         } else {
           lastHeading = smoothHeading(lastHeading, rawHeading, 0.22);
+          cameraHeading = smoothHeading(cameraHeading, lastHeading, 0.15);
         }
       }
 
-      // 🔥 UPDATE MARKER POSITION ONLY
-      smoothMoveMarker(mechanicMarker, mechLoc ?? newLoc, newLoc);
+      /* ================= MARKER ================= */
+      updateMarkerRotation(cameraHeading);
 
-      // 🔁 ROUTE RECALC ONLY WHEN MOVED
+      /* ================= CAMERA (GOOGLE MAPS STYLE) ================= */
+      map.moveCamera({
+        center: newLoc,
+        zoom: 18,
+        heading: cameraHeading,
+        tilt: 45
+      });
+
+      /* ================= ROUTE ================= */
       if (
         routeDrawn &&
         ownerLoc &&
@@ -547,7 +530,6 @@ const wait = setInterval(() => {
 
     if (!navigationCameraStarted) {
       navigationCameraStarted = true;
-      animateNavigationCamera(); // 🔥 THIS IS THE KEY
     }
 
     clearInterval(wait);
