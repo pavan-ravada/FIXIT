@@ -437,17 +437,8 @@ function startLiveTracking() {
       /* ================= HEADING ================= */
       let rawHeading = null;
 
-      // ✅ 1️⃣ DEVICE COMPASS (FASTEST & MOST RESPONSIVE)
-      if (
-        pos.coords.heading !== null &&
-        !isNaN(pos.coords.heading) &&
-        speed > 1.5
-      ) {
-        rawHeading = pos.coords.heading;
-      }
-
-      // ✅ 2️⃣ MOVEMENT-BASED FALLBACK
-      else if (lastMechLoc && speed > 1.5) {
+      // 1️⃣ MOVEMENT-BASED HEADING (PRIMARY FOR WEB)
+      if (lastMechLoc) {
         const from = new google.maps.LatLng(
           lastMechLoc.lat,
           lastMechLoc.lng
@@ -461,21 +452,18 @@ function startLiveTracking() {
           google.maps.geometry.spherical.computeHeading(from, to);
       }
 
-      // ✅ 3️⃣ ROAD-SNAPPED HEADING (GOOGLE MAPS STYLE)
+      // 2️⃣ ROUTE-SNAPPED STABILIZATION
       const routeHeading = getRouteHeading(
         routePath,
         new google.maps.LatLng(newLoc.lat, newLoc.lng)
       );
 
-      // ✅ Route heading ONLY stabilizes when compass is unstable
       if (
-        rawHeading === null ||
-        speed < 1.5 ||
-        routeHeading !== null && Math.abs(routeHeading - rawHeading) > 45
+        routeHeading !== null &&
+        rawHeading !== null &&
+        Math.abs(routeHeading - rawHeading) > 45
       ) {
-        if (routeHeading !== null) {
-          rawHeading = routeHeading;
-        }
+        rawHeading = routeHeading;
       }
 
       /* ================= SMOOTHING ================= */
@@ -483,15 +471,16 @@ function startLiveTracking() {
         if (navigationHeading === null) {
           navigationHeading = rawHeading;
         } else {
-          const delta = Math.abs(rawHeading - navigationHeading);
-          if (delta > MIN_ROTATION_DELTA) {
-            navigationHeading = smoothHeading(
-              navigationHeading,
-              rawHeading,
-              0.18
-            );
-          }
+          navigationHeading = smoothHeading(
+            navigationHeading,
+            rawHeading,
+            0.18
+          );
         }
+      }
+
+      if (navigationHeading === null && rawHeading !== null) {
+        navigationHeading = rawHeading;
       }
 
       /* ================= MARKER ================= */
