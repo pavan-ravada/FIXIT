@@ -11,6 +11,8 @@ const MOCK_MECH_LOCATION = {
   lng: 77.5946
 };
 
+const NAVIGATION_ZOOM = 17;   // change this value freely
+
 /* ================= SESSION ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
 const requestId = localStorage.getItem("activeRequestId");
@@ -109,14 +111,15 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
 
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: mechLat, lng: mechLng },
-    zoom: 16,
+    zoom: NAVIGATION_ZOOM,
     disableDefaultUI: true
   });
 
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true
+    suppressMarkers: true,
+    preserveViewport: true   // 🔒 prevents zoom changes
   });
 
   ownerMarker = new google.maps.Marker({
