@@ -95,6 +95,9 @@ let previousHeading = null;
 
 let routePath = null; // ⭐ holds road polyline
 
+let cameraHeading = 0;
+let navigationCameraStarted = false;
+
 function stopLiveTracking() {
   if (trackingInterval) {
     clearInterval(trackingInterval);
@@ -221,6 +224,23 @@ function smoothHeading(prev, next, factor = HEADING_SMOOTH_FACTOR) {
   if (delta < -180) delta += 360;
 
   return (prev + delta * factor + 360) % 360;
+}
+
+function animateNavigationCamera() {
+  if (!map || lastHeading === null) {
+    requestAnimationFrame(animateNavigationCamera);
+    return;
+  }
+
+  // 🔥 Smooth camera rotation
+  cameraHeading = smoothHeading(cameraHeading, lastHeading, 0.15);
+
+  map.moveCamera({
+    heading: cameraHeading,
+    tilt: 45
+  });
+
+  requestAnimationFrame(animateNavigationCamera);
 }
 
 function smoothMoveMarker(marker, from, to) {
@@ -464,22 +484,17 @@ function startLiveTracking() {
         rawHeading = google.maps.geometry.spherical.computeHeading(from, to);
       }
 
-      // ✅ 3️⃣ SMOOTH HEADING (ONCE)
+      // ✅ 3️⃣ SMOOTH HEADING (GOOGLE MAPS STYLE)
       if (rawHeading !== null && shouldUpdateHeading(lastHeading, rawHeading)) {
         if (lastHeading === null) {
           lastHeading = rawHeading;
+
+          // 🔥 INITIALIZE CAMERA HEADING ON FIRST FIX
+          cameraHeading = rawHeading;
         } else {
           lastHeading = smoothHeading(lastHeading, rawHeading, 0.22);
         }
       }
-
-      // 🔥 GOOGLE MAPS MAGIC — ROTATE MAP, NOT MARKER
-      if (lastHeading !== null && speed > 2.0) {
-        map.setHeading(lastHeading);
-      }
-
-      // 🔥 CAMERA FOLLOWS MECHANIC
-      map.panTo(newLoc);
 
       // 🔥 UPDATE MARKER POSITION ONLY
       smoothMoveMarker(mechanicMarker, mechLoc ?? newLoc, newLoc);
@@ -529,6 +544,12 @@ const mapRetry = setInterval(() => {
 const wait = setInterval(() => {
   if (map && ownerMarker) {
     startLiveTracking();
+
+    if (!navigationCameraStarted) {
+      navigationCameraStarted = true;
+      animateNavigationCamera(); // 🔥 THIS IS THE KEY
+    }
+
     clearInterval(wait);
   }
 }, 500);
