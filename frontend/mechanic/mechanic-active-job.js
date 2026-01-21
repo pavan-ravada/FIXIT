@@ -107,6 +107,11 @@ function stopLiveTracking() {
   }
 }
 
+function shouldUpdateHeading(prev, next, threshold = 3) {
+  if (prev === null) return true;
+  return Math.abs(next - prev) > threshold;
+}
+
 function tryInitMap() {
   if (
     map ||                // already created
@@ -151,8 +156,11 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   /* ================= CREATE MAP ================= */
   map = new google.maps.Map(mapEl, {
     center: { lat: mechLat, lng: mechLng },
-    zoom: 16,
-    disableDefaultUI: true
+    zoom: 18,
+    heading: 0,
+    tilt: 45,                 // 🔥 Google Maps camera tilt
+    disableDefaultUI: true,
+    gestureHandling: "greedy"
   });
 
   /* ================= DIRECTIONS ================= */
@@ -179,11 +187,12 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
   /* ================= MECHANIC MARKER ================= */
   mechanicMarker = new google.maps.Marker({
     position: { lat: mechLat, lng: mechLng },
-    map: map,
+    map,
     title: "You",
     icon: {
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
       scale: 6,
+      rotation: 0,            // 🔥 ALWAYS UP
       fillColor: "#1A73E8",
       fillOpacity: 1,
       strokeWeight: 2
@@ -225,34 +234,6 @@ function smoothMoveMarker(marker, from, to) {
     const lng = from.lng + (to.lng - from.lng) * t;
 
     marker.setPosition({ lat, lng });
-
-    if (t < 1) requestAnimationFrame(frame);
-  }
-
-  requestAnimationFrame(frame);
-}
-
-function animateRotation(marker, from, to) {
-  const start = performance.now();
-
-  function frame(now) {
-    const t = Math.min((now - start) / ROTATION_ANIMATION_MS, 1);
-    const eased = t * (2 - t); // ease-out
-
-    let delta = to - from;
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
-
-    const angle = (from + delta * eased + 360) % 360;
-
-    marker.setIcon({
-      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      scale: 6,
-      rotation: angle,
-      fillColor: "#1A73E8",
-      fillOpacity: 1,
-      strokeWeight: 2
-    });
 
     if (t < 1) requestAnimationFrame(frame);
   }
@@ -328,14 +309,6 @@ function updateMechanicMarker(lat, lng, heading = null) {
     );
   } else {
     mechanicMarker.setPosition({ lat, lng });
-  }
-
-  if (
-    heading !== null &&
-    previousHeading !== null &&
-    lastHeading !== null
-  ) {
-    animateRotation(mechanicMarker, previousHeading, lastHeading);
   }
 }
 
@@ -465,19 +438,20 @@ function startLiveTracking() {
         lng: pos.coords.longitude
       };
 
-      // 🔥 1️⃣ GET HEADING FROM GPS (mobile)
+      const speed = pos.coords.speed ?? 0;
 
-      // update backend (owner tracking)
-      // 🔥 1️⃣ GET HEADING (FAST & ACCURATE)
+      // 🔥 SEND LOCATION TO BACKEND
+      sendMechanicLocation(newLoc.lat, newLoc.lng);
+
       let rawHeading = null;
 
-      // ✅ BEST: device compass heading (instant turn)
-      if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+      // ✅ 1️⃣ COMPASS HEADING (BEST – instant turn)
+      if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && speed > 1.5) {
         rawHeading = pos.coords.heading;
       }
 
-      // ✅ FALLBACK: movement-based heading
-      else if (lastMechLoc) {
+      // ✅ 2️⃣ FALLBACK – movement-based heading
+      else if (lastMechLoc && speed > 1.5) {
         const from = new google.maps.LatLng(
           lastMechLoc.lat,
           lastMechLoc.lng
@@ -490,33 +464,31 @@ function startLiveTracking() {
         rawHeading = google.maps.geometry.spherical.computeHeading(from, to);
       }
 
-      // ✅ SMOOTHING (CRITICAL)
-      if (rawHeading !== null) {
+      // ✅ 3️⃣ SMOOTH HEADING (ONCE)
+      if (rawHeading !== null && shouldUpdateHeading(lastHeading, rawHeading)) {
         if (lastHeading === null) {
           lastHeading = rawHeading;
-          previousHeading = rawHeading;
         } else {
-          previousHeading = lastHeading;
-          lastHeading = smoothHeading(lastHeading, rawHeading, 0.25);
+          lastHeading = smoothHeading(lastHeading, rawHeading, 0.22);
         }
       }
 
-      // 🔥 UPDATE MARKER WITH ROTATION
-      updateMechanicMarker(
-        newLoc.lat,
-        newLoc.lng,
-        lastHeading
-      );
+      // 🔥 GOOGLE MAPS MAGIC — ROTATE MAP, NOT MARKER
+      if (lastHeading !== null && speed > 2.0) {
+        map.setHeading(lastHeading);
+      }
 
-      // 🔁 redraw route only if moved
+      // 🔥 CAMERA FOLLOWS MECHANIC
+      map.panTo(newLoc);
+
+      // 🔥 UPDATE MARKER POSITION ONLY
+      smoothMoveMarker(mechanicMarker, mechLoc ?? newLoc, newLoc);
+
+      // 🔁 ROUTE RECALC ONLY WHEN MOVED
       if (
         routeDrawn &&
         ownerLoc &&
-        (
-          !mechLoc ||
-          distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS &&
-          Math.abs(lastHeading ?? 0) > 1
-        )
+        (!mechLoc || distanceMeters(mechLoc, newLoc) > MIN_MOVE_METERS)
       ) {
         drawRoute(
           newLoc.lat,
@@ -530,7 +502,11 @@ function startLiveTracking() {
       mechLoc = newLoc;
     },
     () => alert("Enable GPS"),
-    { enableHighAccuracy: true }
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
   );
 
 
