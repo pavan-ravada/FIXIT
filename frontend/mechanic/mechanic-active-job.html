@@ -120,6 +120,22 @@ h2{
   z-index: 1;
 }
 
+#fixedArrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
+<path d='M12 2L4 20l8-4 8 4z' fill='%231A73E8'/></svg>");
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 999;
+  pointer-events: none;
+}
+
 /* ================= ROUTE CARD ================= */
 .route-card{
   display:flex;
@@ -218,7 +234,9 @@ h2{
   </div>
 
   <!-- MAP -->
-  <div id="map"></div>
+  <div id="map">
+    <div id="fixedArrow"></div>
+  </div>
 
   <!-- ROUTE -->
   <div class="route-card">

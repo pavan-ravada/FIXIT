@@ -114,6 +114,12 @@ function stopLiveTracking() {
   }
 }
 
+function updateFixedArrow(heading) {
+    if (heading === null) return;
+    document.getElementById("fixedArrow").style.transform =
+      `translate(-50%, -50%) rotate(${heading}deg)`;
+  }
+
 function shouldUpdateHeading(prev, next, threshold = 3) {
   if (prev === null) return true;
   return Math.abs(next - prev) > threshold;
@@ -189,21 +195,6 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     map: map,
     title: "Owner",
     icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
-  });
-
-  /* ================= MECHANIC MARKER ================= */
-  mechanicMarker = new google.maps.Marker({
-    position: map.getCenter(), // 🔥 LOCK TO CENTER
-    map,
-    title: "You",
-    icon: {
-      path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-      scale: 6,
-      rotation: 0,
-      fillColor: "#1A73E8",
-      fillOpacity: 1,
-      strokeWeight: 2
-    }
   });
 
   /* ================= INITIAL ROUTE ================= */
@@ -388,8 +379,6 @@ function updateMarkerRotation(heading) {
 
   const icon = mechanicMarker.getIcon();
   icon.rotation = heading;
-
-  mechanicMarker.setIcon(icon);
 }
 
 function startLiveTracking() {
@@ -410,7 +399,7 @@ function startLiveTracking() {
       map.moveCamera({
         center: new google.maps.LatLng(newLoc.lat, newLoc.lng),
         heading: navigationHeading ?? map.getHeading(),
-        zoom: 18,
+        zoom: map.getZoom(),   // 🔥 DO NOT FORCE
         tilt: 45
       });
 
@@ -484,7 +473,7 @@ function startLiveTracking() {
       }
 
       /* ================= MARKER ================= */
-      updateMarkerRotation(navigationHeading);
+      updateFixedArrow(navigationHeading);
 
       /* ================= CAMERA (GOOGLE MAPS STYLE) ================= */
       map.moveCamera({
