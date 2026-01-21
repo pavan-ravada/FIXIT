@@ -76,6 +76,8 @@ let directionsRenderer = null;
 let ownerLoc = null;
 let mechLoc = null;
 let lastSentLoc = null;
+
+let mapInitStarted = false;
 let trackingStarted = false;
 let routeDrawn = false;
 
@@ -83,9 +85,6 @@ let googleMapsReady = false;
 
 let trackingInterval = null;
 let geoWatchId = null;
-
-let lastMechLocForHeading = null;
-let routePath = [];
 
 function stopLiveTracking() {
   if (trackingInterval) {
@@ -99,79 +98,37 @@ function stopLiveTracking() {
   }
 }
 
-function tryInitMap() {
-  if (
-    map ||                // already created
-    !ownerLoc ||           // owner location not ready
-    !mechLoc ||            // mechanic location not ready
-    !window.google ||
-    !google.maps ||
-    typeof google.maps.Map !== "function"
-  ) {
-    return;
-  }
-
-  initMap(
-    ownerLoc.lat,
-    ownerLoc.lng,
-    mechLoc.lat,
-    mechLoc.lng
-  );
-}
-
 /* ================= MAP INIT ================= */
 function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  /* ================= HARD SAFETY CHECKS ================= */
-  if (
-    typeof window.google === "undefined" ||
-    typeof google.maps === "undefined" ||
-    typeof google.maps.Map !== "function"
-  ) {
-    console.warn("⏳ Google Maps not ready yet");
+  if (!window.googleMapsReady) {
+    console.warn("⏳ Waiting for Google Maps...");
     return;
   }
 
-  /* ================= PREVENT DOUBLE INIT ================= */
-  if (map) return;
+  if (!window.google || !window.google.maps || map) return;
 
-  const mapEl = document.getElementById("map");
-  if (!mapEl) {
-    console.error("❌ Map container not found");
-    return;
-  }
-
-  /* ================= CREATE MAP ================= */
-  map = new google.maps.Map(mapEl, {
+  map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: mechLat, lng: mechLng },
     zoom: 16,
     disableDefaultUI: true
   });
 
-  map.moveCamera({
-    tilt: 60,
-    zoom: 17
-  });
-
-  /* ================= DIRECTIONS ================= */
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
-    map: map,
-    suppressMarkers: true,
-    preserveViewport: true   // 🔥 VERY IMPORTANT
+    map,
+    suppressMarkers: true
   });
 
-  /* ================= OWNER MARKER ================= */
   ownerMarker = new google.maps.Marker({
     position: { lat: ownerLat, lng: ownerLng },
-    map: map,
+    map,
     title: "Owner",
     icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
   });
 
-  /* ================= MECHANIC MARKER ================= */
   mechanicMarker = new google.maps.Marker({
     position: { lat: mechLat, lng: mechLng },
-    map: map,
+    map,
     title: "You",
     icon: {
       path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
@@ -182,13 +139,11 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     }
   });
 
-  /* ================= INITIAL ROUTE ================= */
   drawRoute(mechLat, mechLng, ownerLat, ownerLng);
   routeDrawn = true;
 
-  /* ================= MOBILE / TAB FIX ================= */
   setTimeout(() => {
-    if (!map || !mechanicMarker) return;
+    if (!map) return;
 
     google.maps.event.trigger(map, "resize");
     map.setCenter(mechanicMarker.getPosition());
@@ -209,10 +164,6 @@ function drawRoute(mlat, mlng, olat, olng) {
       if (status !== "OK") return;
 
       directionsRenderer.setDirections(res);
-      routePath = res.routes[0].overview_path.map(p => ({
-        lat: p.lat(),
-        lng: p.lng()
-      }));
       const leg = res.routes[0].legs[0];
 
       document.getElementById("routeDistance").innerText =
@@ -228,57 +179,11 @@ function drawRoute(mlat, mlng, olat, olng) {
   );
 }
 
-function computeBearing(from, to) {
-  const φ1 = from.lat * Math.PI / 180;
-  const φ2 = to.lat * Math.PI / 180;
-  const Δλ = (to.lng - from.lng) * Math.PI / 180;
-
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x =
-    Math.cos(φ1) * Math.sin(φ2) -
-    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-
-  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-}
-
-
 /* ================= MARKER UPDATE ================= */
 function updateMechanicMarker(lat, lng) {
   if (!map || !mechanicMarker) return;
   mechanicMarker.setPosition({ lat, lng });
   //map.panTo({ lat, lng });
-}
-
-function updateNavigation(lat, lng, gpsHeading = null) {
-  if (!map || !mechanicMarker) return;
-
-  let heading = gpsHeading;
-
-  // 1️⃣ GPS heading (best)
-  if (heading === null && lastMechLocForHeading) {
-    heading = computeBearing(lastMechLocForHeading, { lat, lng });
-  }
-
-  // 2️⃣ Route fallback
-  if (heading === null && routePath.length >= 2) {
-    heading = computeBearing(routePath[0], routePath[1]);
-  }
-
-  if (heading === null) heading = 0;
-
-  // 🔵 Rotate marker
-  mechanicMarker.setIcon({
-    ...mechanicMarker.getIcon(),
-    rotation: heading
-  });
-
-  // 🔵 Rotate & center map
-  map.moveCamera({
-    center: { lat, lng },
-    heading: heading,
-  });
-
-  lastMechLocForHeading = { lat, lng };
 }
 
 /* ================= FETCH JOB ================= */
@@ -320,37 +225,50 @@ async function fetchJob() {
 
   ownerLoc = data.ownerLocation || ownerLoc;
 
-  /* ================= MAP DATA SETUP ================= */
+  /* ✅ MAP INIT */
+  if (ownerLoc && !mapInitStarted) {
+    mapInitStarted = true;
 
-  // owner location from backend
-  if (data.ownerLocation) {
-    ownerLoc = data.ownerLocation;
+    if (DEMO_MODE) {
+      // 🧪 DEMO LOCATION
+      mechLoc = { ...MOCK_MECH_LOCATION };
+
+      initMap(
+        ownerLoc.lat,
+        ownerLoc.lng,
+        mechLoc.lat,
+        mechLoc.lng
+      );
+
+      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+      // ✅ ENABLE BUTTON HERE
+
+    } else {
+      // 📍 REAL GPS MODE
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          mechLoc = { lat, lng };
+
+          initMap(
+            ownerLoc.lat,
+            ownerLoc.lng,
+            lat,
+            lng
+          );
+
+          // ✅ ENABLE BUTTON HERE
+        },
+        err => {
+          console.error("GPS error", err);
+          alert("Enable GPS to continue");
+        },
+        { enableHighAccuracy: true }
+      );
+    }
   }
-
-  // mechanic location
-  if (DEMO_MODE && !mechLoc) {
-    mechLoc = { ...MOCK_MECH_LOCATION };
-    sendMechanicLocation(mechLoc.lat, mechLoc.lng);
-  }
-
-  if (!DEMO_MODE && !mechLoc) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        mechLoc = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
-      },
-      err => {
-        console.error("GPS error", err);
-        alert("Enable GPS to continue");
-      },
-      { enableHighAccuracy: true }
-    );
-  }
-
-  // 🔁 SAFE RETRY (KEY LINE)
-  tryInitMap();
 
   /* 🔁 UPDATE FROM FIRESTORE */
   if (data.mechanicLocation && map) {
@@ -384,7 +302,6 @@ function startLiveTracking() {
 
       sendMechanicLocation(mechLoc.lat, mechLoc.lng);
       updateMechanicMarker(mechLoc.lat, mechLoc.lng);
-      updateNavigation(mechLoc.lat, mechLoc.lng);
 
       if (routeDrawn && ownerLoc) {
         drawRoute(mechLoc.lat, mechLoc.lng, ownerLoc.lat, ownerLoc.lng);
@@ -402,7 +319,6 @@ function startLiveTracking() {
 
       sendMechanicLocation(lat, lng);
       updateMechanicMarker(lat, lng);
-      updateNavigation(lat, lng, pos.coords.heading);
 
       if (routeDrawn && ownerLoc) {
         drawRoute(lat, lng, ownerLoc.lat, ownerLoc.lng);
@@ -417,16 +333,6 @@ function startLiveTracking() {
 fetchJob();
 setInterval(fetchJob, 5000);
 
-/* 🔁 SAFE MAP RETRY (FIXES REFRESH ISSUE) */
-const mapRetry = setInterval(() => {
-  if (map) {
-    clearInterval(mapRetry);
-    return;
-  }
-  tryInitMap();
-}, 300);
-
-/* ▶ START TRACKING ONLY AFTER MAP EXISTS */
 const wait = setInterval(() => {
   if (map && ownerMarker) {
     startLiveTracking();
