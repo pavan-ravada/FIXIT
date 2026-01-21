@@ -111,7 +111,7 @@ h2{
 #map{
   width:100%;
   min-height: 420px;
-  height:420px;
+  height:100%;
   background: #e5e7eb;
   border-radius:18px;
   border:1px solid #e5e7eb;
@@ -127,12 +127,7 @@ h2{
   width: 36px;
   height: 36px;
   transform: translate(-50%, -50%) rotate(0deg);
-  background: url("data:image/svg+xml;utf8,\
-<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>\
-<path d='M12 2L4 20l8-4 8 4z' fill='%231A73E8'/></svg>");
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 999;
+  z-index: 1000;
   pointer-events: none;
 }
 
@@ -234,7 +229,8 @@ h2{
   </div>
 
   <!-- MAP -->
-  <div id="map">
+  <div class="map-wrapper">
+    <div id="map"></div>
     <div id="fixedArrow"></div>
   </div>
 
