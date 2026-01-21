@@ -147,11 +147,17 @@ function initMap(ownerLat, ownerLng, mechLat, mechLng) {
     disableDefaultUI: true
   });
 
+  map.moveCamera({
+    tilt: 60,
+    zoom: 17
+  });
+
   /* ================= DIRECTIONS ================= */
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map: map,
-    suppressMarkers: true
+    suppressMarkers: true,
+    preserveViewport: true   // 🔥 VERY IMPORTANT
   });
 
   /* ================= OWNER MARKER ================= */
@@ -270,8 +276,6 @@ function updateNavigation(lat, lng, gpsHeading = null) {
   map.moveCamera({
     center: { lat, lng },
     heading: heading,
-    tilt: 60,
-    zoom: 17
   });
 
   lastMechLocForHeading = { lat, lng };
