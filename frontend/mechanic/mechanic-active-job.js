@@ -98,6 +98,10 @@ let routePath = null; // ⭐ holds road polyline
 let cameraHeading = 0;
 let navigationCameraStarted = false;
 
+/* ================= NEW STATE ================= */
+let navigationHeading = null; // ✅ single source of truth
+let lastRouteHeading = null;
+
 function stopLiveTracking() {
   if (trackingInterval) {
     clearInterval(trackingInterval);
@@ -395,15 +399,22 @@ function startLiveTracking() {
   if (DEMO_MODE) {
     // 🔁 Simulate movement every 3 seconds
     trackingInterval = setInterval(() => {
-      mechLoc.lat += 0.00005;
-      mechLoc.lng += 0.00005;
+      const newLoc = {
+        lat: mechLoc.lat + 0.00005,
+        lng: mechLoc.lng + 0.00005
+      };
 
-      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
-      updateMechanicMarker(mechLoc.lat, mechLoc.lng);
+      mechLoc = newLoc;
+      sendMechanicLocation(newLoc.lat, newLoc.lng);
 
-      if (routeDrawn && ownerLoc) {
-        drawRoute(mechLoc.lat, mechLoc.lng, ownerLoc.lat, ownerLoc.lng);
-      }
+      map.moveCamera({
+        center: new google.maps.LatLng(newLoc.lat, newLoc.lng),
+        heading: navigationHeading ?? map.getHeading(),
+        zoom: 18,
+        tilt: 45
+      });
+
+      lastMechLoc = newLoc;
     }, 3000);
 
     return;
@@ -456,29 +467,41 @@ function startLiveTracking() {
         new google.maps.LatLng(newLoc.lat, newLoc.lng)
       );
 
-      if (routeHeading !== null) {
-        rawHeading = routeHeading;
+      // ✅ Route heading ONLY stabilizes when compass is unstable
+      if (
+        rawHeading === null ||
+        speed < 1.5 ||
+        routeHeading !== null && Math.abs(routeHeading - rawHeading) > 45
+      ) {
+        if (routeHeading !== null) {
+          rawHeading = routeHeading;
+        }
       }
 
       /* ================= SMOOTHING ================= */
-      if (rawHeading !== null && shouldUpdateHeading(lastHeading, rawHeading)) {
-        if (lastHeading === null) {
-          lastHeading = rawHeading;
-          cameraHeading = rawHeading;
+      if (rawHeading !== null) {
+        if (navigationHeading === null) {
+          navigationHeading = rawHeading;
         } else {
-          lastHeading = smoothHeading(lastHeading, rawHeading, 0.22);
-          cameraHeading = smoothHeading(cameraHeading, lastHeading, 0.15);
+          const delta = Math.abs(rawHeading - navigationHeading);
+          if (delta > MIN_ROTATION_DELTA) {
+            navigationHeading = smoothHeading(
+              navigationHeading,
+              rawHeading,
+              0.18
+            );
+          }
         }
       }
 
       /* ================= MARKER ================= */
-      updateMarkerRotation(cameraHeading);
+      updateMarkerRotation(navigationHeading);
 
       /* ================= CAMERA (GOOGLE MAPS STYLE) ================= */
       map.moveCamera({
-        center: newLoc,
+        center: new google.maps.LatLng(newLoc.lat, newLoc.lng),
+        heading: navigationHeading ?? map.getHeading(),
         zoom: 18,
-        heading: cameraHeading,
         tilt: 45
       });
 
