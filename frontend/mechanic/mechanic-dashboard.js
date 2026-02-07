@@ -8,7 +8,7 @@ if (!mechanicRaw) {
 const mechanic = JSON.parse(mechanicRaw);
 
 // 🔧 DEMO MODE (false in real GPS)
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 /* ================= ELEMENTS (SAFE) ================= */
 const availabilityBtn = document.getElementById("availabilityBtn");
