@@ -106,18 +106,41 @@ h2{
   font-size:.85rem;
   color:#6b7280;
 }
+/* ================= BILL ACTION ================= */
+
+.bill-action {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+#createBillBtn {
+  width: 100%;
+  max-width: 420px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: none;
+  background: #000000;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: none; /* 🔒 controlled by JS */
+}
+
+#createBillBtn:active {
+  transform: scale(0.98);
+}
 
 /* ================= MAP ================= */
 #map{
   width:100%;
-  min-height: 420px;
+  min-height:420px;
   height:420px;
-  background: #e5e7eb;
+  background:#e5e7eb;
   border-radius:18px;
   border:1px solid #e5e7eb;
   margin-bottom:22px;
-  position: relative;
-  z-index: 1;
 }
 
 /* ================= ROUTE CARD ================= */
@@ -139,17 +162,24 @@ h2{
   color:#374151;
 }
 
-#openGoogleMapsBtn{
+/* BUTTONS */
+.action-buttons{
+  display:flex;
+  gap:12px;
+}
+
+#openGoogleMapsBtn,
+#createBillBtn{
   padding:12px 20px;
   border-radius:14px;
   border:none;
-  background:#000000;
-  color:#ffffff;
   font-weight:600;
   cursor:pointer;
-  position: relative;
-  z-index: 9999;           /* 🔥 ABOVE MAP */
-  pointer-events: auto;    /* 🔥 FORCE TOUCH */
+}
+
+#openGoogleMapsBtn{
+  background:#000000;
+  color:#ffffff;
 }
 
 #openGoogleMapsBtn.disabled{
@@ -212,6 +242,7 @@ h2{
   <div class="status-card">
     <p><strong>Status:</strong> <span id="statusText">Loading...</span></p>
     <p id="ownerInfo"></p>
+    <p id="billInfoText" class="hint"></p>
     <p class="hint">
       Follow the route below. Share OTP after reaching the customer.
     </p>
@@ -220,14 +251,22 @@ h2{
   <!-- MAP -->
   <div id="map"></div>
 
-  <!-- ROUTE -->
+  <!-- ROUTE + ACTIONS -->
   <div class="route-card">
     <div>
       <p id="routeDistance">Distance: --</p>
       <p id="routeDuration">ETA: --</p>
     </div>
-    <button id="openGoogleMapsBtn">
+
+    <button id="openGoogleMapsBtn" class="disabled">
       Open in Google Maps
+    </button>
+  </div>
+
+  <!-- BILL ACTION -->
+  <div class="bill-action">
+    <button id="createBillBtn">
+      Create Bill
     </button>
   </div>
 
@@ -237,31 +276,24 @@ h2{
     <span id="otpValue">----</span>
   </div>
 
-  <p id="message"></p>
 </div>
 
 <!-- GOOGLE MAPS -->
- <script
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry&loading=async&callback=onGoogleMapsReady"
+<script
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4DAZ7_jMnbtxUlouiAdFv9O3DRCoyeyw&libraries=places,geometry"
   async
   defer>
 </script>
 
 <!-- UI -->
 <script>
-document.getElementById("logo").onclick=()=>location.href="./mechanic-dashboard.html";
+document.getElementById("logo").onclick = () =>
+  location.href = "./mechanic-dashboard.html";
 
-const p=document.getElementById("profileIcon");
-const m=document.getElementById("profileMenu");
-p.onclick=e=>{e.stopPropagation();m.classList.toggle("active")}
-document.addEventListener("click",()=>m.classList.remove("active"));
-</script>
-
-<script>
-  window.onGoogleMapsReady = () => {
-    console.log("✅ Google Maps loaded");
-    window.googleMapsReady = true;
-  };
+const p = document.getElementById("profileIcon");
+const m = document.getElementById("profileMenu");
+p.onclick = e => { e.stopPropagation(); m.classList.toggle("active"); };
+document.addEventListener("click", () => m.classList.remove("active"));
 </script>
 
 <!-- LOGIC -->

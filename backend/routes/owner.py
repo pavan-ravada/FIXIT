@@ -229,30 +229,17 @@ def get_request(request_id):
     mechanic_location = req.get("mechanic_location")
 
     return jsonify({
-        "request_id": request_id,
-        "status": req.get("status"),
-
-        # 📍 LOCATIONS
-        "ownerLocation": req.get("owner_location"),
-        "mechanic": mechanic_data,
-        "mechanicLocation": mechanic_location,
-
-        # 🔍 SEARCH / RADIUS INFO
-        "search_radius_km": req.get("search_radius_km"),
-        "radius_expanded_count": req.get("radius_expanded_count", 0),
-        "timeout_at": req.get("timeout_at"),
-        "created_at": req.get("created_at"),
-
-        # 🔐 OTP
-        "allowOtp": (
-            req.get("status") == "ACCEPTED"
-            and not req.get("otp_verified")
-        ),
-
-        # 🔒 ACTION FLAGS
-        "canCancel": req.get("status") in ["SEARCHING", "ACCEPTED"],
-        "canComplete": req.get("status") == "IN_PROGRESS"
-    }), 200
+    "request_id": request_id,
+    "status": req.get("status"),
+    "bill_status": req.get("bill_status"),  # 🔥 REQUIRED
+    "ownerLocation": req.get("owner_location"),
+    "mechanic": mechanic_data,
+    "mechanicLocation": mechanic_location,
+    "search_radius_km": req.get("search_radius_km"),
+    "radius_expanded_count": req.get("radius_expanded_count", 0),
+    "timeout_at": req.get("timeout_at"),
+    "created_at": req.get("created_at"),
+}), 200
 
 
 
@@ -385,7 +372,7 @@ def submit_feedback(request_id):
     req_ref.update({
         "rating": int(rating),
         "feedback": feedback,
-        "rated_at": datetime.utcnow()
+        "rated_at": firestore.SERVER_TIMESTAMP
     })
 
     return jsonify({"message": "Feedback submitted successfully"}), 200
@@ -424,45 +411,58 @@ def owner_history():
     return jsonify({"history": history}), 200
 
 
-from flask import request, jsonify
 
-@owner_bp.route("/request/location/<request_id>", methods=["GET", "OPTIONS"])
-def get_mechanic_location(request_id):
+from flask_cors import cross_origin
 
-    # ✅ HANDLE PREFLIGHT
+@owner_bp.route("/request/details/<request_id>", methods=["GET", "OPTIONS"])
+@cross_origin()
+def owner_request_details(request_id):
+
+    # ✅ Handle preflight explicitly
     if request.method == "OPTIONS":
         return "", 200
-
-    phone = request.args.get("phone")
-
-    # ✅ PHONE NOT SENT → SAFE RESPONSE
-    if not phone:
-        return jsonify({"mechanic": None}), 200
 
     req_ref = db.collection("requests").document(request_id)
     req_doc = req_ref.get()
 
     if not req_doc.exists:
-        return jsonify({"mechanic": None}), 200
+        return jsonify({"error": "Request not found"}), 404
 
     req = req_doc.to_dict()
 
-    # 🔒 OWNER AUTH
-    if req.get("owner_phone") != phone:
-        return jsonify({"mechanic": None}), 200
+    # -----------------------------
+    # FETCH BILL (OPTIONAL)
+    # -----------------------------
+    bill_data = None
+    bill_ref = db.collection("bills").document(request_id)
+    bill_doc = bill_ref.get()
 
-    # ✅ ALLOW TRACKING STATES
-    if req.get("status") not in ["SEARCHING", "ACCEPTED", "IN_PROGRESS"]:
-        return jsonify({"mechanic": None}), 200
+    if bill_doc.exists:
+        bill_data = bill_doc.to_dict()
 
-    mechanic_location = req.get("mechanic_location")
+    return jsonify({
+        "request_id": request_id,
 
-    # ✅ MECHANIC NOT MOVED YET
-    if not mechanic_location:
-        return jsonify({"mechanic": None}), 200
+        "vehicle_type": req.get("vehicle_type"),
+        "service_type": req.get("service_type"),
+        "description": req.get("description"),
+        "status": req.get("status"),
 
-    # ✅ LOCATION AVAILABLE
-    return jsonify(mechanic_location), 200
+        "bill": {
+            "items": bill_data.get("items", []),
+            "services": bill_data.get("services", []),
+            "items_total": bill_data.get("items_total"),
+            "services_total": bill_data.get("services_total"),
+            "grand_total": bill_data.get("grand_total"),
+            "status": bill_data.get("status")
+        } if bill_data else None,
+
+        "rating": req.get("rating"),
+        "feedback": req.get("feedback"),
+
+        "created_at": req.get("created_at"),
+        "completed_at": req.get("completed_at")
+    }), 200
 
 
 # -----------------------------
@@ -562,4 +562,87 @@ def owner_profile():
     return jsonify({
         "phone": owner.get("phone"),
         "active_request_id": owner.get("active_request_id")
+    }), 200
+
+
+# -----------------------------
+# OWNER BILL ROUTES
+# -----------------------------
+
+@owner_bp.route("/bill/<request_id>", methods=["GET"])
+def owner_get_bill(request_id):
+    bill_ref = db.collection("bills").document(request_id)
+    bill_doc = bill_ref.get()
+
+    if not bill_doc.exists:
+        return jsonify({"error": "Bill not found"}), 404
+
+    return jsonify(bill_doc.to_dict()), 200
+
+
+@owner_bp.route("/bill/confirm", methods=["POST"])
+def confirm_bill():
+    data = request.json
+    request_id = data.get("request_id")
+
+    if not request_id:
+        return jsonify({"error": "request_id required"}), 400
+
+    req_ref = db.collection("requests").document(request_id)
+    req_doc = req_ref.get()
+
+    if not req_doc.exists:
+        return jsonify({"error": "Request not found"}), 404
+
+    req = req_doc.to_dict()
+
+    # 🔒 BILL STATE GUARD
+    if req.get("bill_status") != "AWAITING_BILL_CONFIRMATION":
+        return jsonify({"error": "Bill not ready"}), 400
+
+    owner_phone = req.get("owner_phone")
+    mechanic_phone = req.get("mechanic_phone")
+
+    # 1️⃣ CONFIRM BILL
+    db.collection("bills").document(request_id).update({
+        "status": "CONFIRMED",
+        "confirmed_at": firestore.SERVER_TIMESTAMP
+    })
+
+    # 2️⃣ COMPLETE REQUEST
+    req_ref.update({
+        "bill_status": "CONFIRMED",
+        "status": "COMPLETED",
+        "completed_at": firestore.SERVER_TIMESTAMP
+    })
+
+    # 3️⃣ CLEAR OWNER ACTIVE REQUEST
+    if owner_phone:
+        owner_docs = (
+            db.collection("owners")
+            .where("phone", "==", owner_phone)
+            .limit(1)
+            .get()
+        )
+        if owner_docs:
+            owner_docs[0].reference.update({
+                "active_request_id": None
+            })
+
+    # 4️⃣ RELEASE MECHANIC COMPLETELY
+    if mechanic_phone:
+        mech_docs = (
+            db.collection("mechanics")
+            .where("phone", "==", mechanic_phone)
+            .limit(1)
+            .get()
+        )
+        if mech_docs:
+            mech_docs[0].reference.update({
+                "active_request_id": None,
+                "is_available": True
+            })
+
+    return jsonify({
+        "message": "Bill confirmed. Job closed successfully."
     }), 200

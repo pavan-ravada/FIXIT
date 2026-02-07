@@ -551,12 +551,12 @@ def get_mechanic_request_status(request_id):
     req_doc = req_ref.get()
 
     if not req_doc.exists:
-        return {"error": "Request not found"}, 404
+        return jsonify({"error": "Request not found"}), 404
 
     req = req_doc.to_dict()
 
     if req.get("mechanic_phone") != phone:
-        return {"error": "Unauthorized"}, 403
+        return jsonify({"error": "Unauthorized"}), 403
 
     owner_data = None
     if req.get("owner_phone"):
@@ -573,18 +573,19 @@ def get_mechanic_request_status(request_id):
                 "phone": o.get("phone")
             }
 
-    return {
+    return jsonify({
         "request_id": request_id,
         "status": req.get("status"),
-        "otp": req.get("otp"),
-        "otp_verified": req.get("otp_verified"),
 
-        # 🔥 THESE TWO ARE REQUIRED FOR MAP
+        # 🔥🔥🔥 THIS IS THE FIX 🔥🔥🔥
+        "bill_status": req.get("bill_status", "NOT_CREATED"),
+
+        "otp": req.get("otp"),
+        "otp_verified": req.get("otp_verified", False),
         "ownerLocation": req.get("owner_location"),
         "mechanicLocation": req.get("mechanic_location"),
-
         "owner": owner_data
-    }, 200
+    }), 200
 
 
 @mechanic_bp.route("/profile", methods=["GET"])
@@ -604,4 +605,93 @@ def mechanic_profile():
         "verified": m.get("verified"),
         "is_available": m.get("is_available"),
         "active_request_id": m.get("active_request_id")
+    }), 200
+
+
+
+@mechanic_bp.route("/bill/create", methods=["POST"])
+def create_bill():
+    data = request.json
+
+    request_id = data.get("request_id")
+    items = data.get("items", [])
+    services = data.get("services", [])
+
+    if not request_id:
+        return jsonify({"error": "request_id required"}), 400
+
+    req_ref = db.collection("requests").document(request_id)
+    req_doc = req_ref.get()
+
+    if not req_doc.exists:
+        return jsonify({"error": "Request not found"}), 404
+
+    req = req_doc.to_dict()
+
+    if req.get("bill_status") in ["CREATED", "AWAITING_BILL_CONFIRMATION", "CONFIRMED"]:
+        return jsonify({"error": "Bill already created"}), 400
+
+    if req.get("status") not in ["IN_PROGRESS", "WORK_STARTED"]:
+        return jsonify({"error": "Cannot create bill before work completion"}), 400
+
+    items_total = sum(
+        (i.get("quantity", 1) * i.get("price", 0)) for i in items
+    )
+
+    services_total = sum(
+        s.get("price", 0) for s in services
+    )
+
+    grand_total = items_total + services_total
+
+    bill_data = {
+        "request_id": request_id,
+        "owner_phone": req.get("owner_phone"),
+        "mechanic_phone": req.get("mechanic_phone"),
+        "items": items,
+        "services": services,
+        "items_total": items_total,
+        "services_total": services_total,
+        "grand_total": grand_total,
+        "status": "AWAITING_BILL_CONFIRMATION",
+        "created_at": firestore.SERVER_TIMESTAMP,
+        "confirmed_at": None
+    }
+
+    db.collection("bills").document(request_id).set(bill_data)
+
+    req_ref.update({
+        "bill_status": "AWAITING_BILL_CONFIRMATION"
+    })
+
+    return jsonify({
+        "message": "Bill created successfully",
+        "grand_total": grand_total
+    }), 200
+
+
+@mechanic_bp.route("/bill/<request_id>", methods=["GET"])
+def mechanic_get_bill(request_id):
+    bill_ref = db.collection("bills").document(request_id)
+    bill_doc = bill_ref.get()
+
+    if not bill_doc.exists:
+        return jsonify({"error": "Bill not found"}), 404
+
+    return jsonify(bill_doc.to_dict()), 200
+
+
+@mechanic_bp.route("/bill/status/<request_id>", methods=["GET"])
+def mechanic_bill_status(request_id):
+    req_ref = db.collection("requests").document(request_id)
+    req_doc = req_ref.get()
+
+    if not req_doc.exists:
+        return jsonify({"error": "Request not found"}), 404
+
+    req = req_doc.to_dict()
+
+    return jsonify({
+        "request_id": request_id,
+        "bill_status": req.get("bill_status", "NOT_CREATED")
     }), 200

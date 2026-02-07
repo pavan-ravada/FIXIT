@@ -5,7 +5,7 @@ console.log("🔥 request-mechanic.js loaded");
 // 🔧 DEMO MODE
 // 👉 Localhost = demo location
 // 👉 Production = real GPS
-const DEMO_MODE = location.hostname === "Production";
+const DEMO_MODE = location.hostname === "localhost";
 
 document.addEventListener("DOMContentLoaded", () => {
 

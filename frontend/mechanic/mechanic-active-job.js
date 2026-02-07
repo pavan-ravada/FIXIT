@@ -4,14 +4,12 @@ import { apiGet, apiPost } from "../js/api.js";
 const MIN_MOVE_METERS = 5;
 const ROUTE_RECALC_METERS = 60;
 
-const DEMO_MODE = false;
+const DEMO_MODE = true;
 
 const MOCK_MECH_LOCATION = {
   lat: 12.9716,   // Bengaluru
   lng: 77.5946
 };
-
-const NAVIGATION_ZOOM = 17;   // change this value freely
 
 /* ================= SESSION ================= */
 const mechanic = JSON.parse(localStorage.getItem("mechanic"));
@@ -27,6 +25,7 @@ const ownerInfo = document.getElementById("ownerInfo");
 const otpBox = document.getElementById("otpBox");
 const otpValue = document.getElementById("otpValue");
 const openGoogleMapsBtn = document.getElementById("openGoogleMapsBtn");
+const createBillBtn = document.getElementById("createBillBtn");
 const historyBtn = document.getElementById("historyBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -68,6 +67,11 @@ openGoogleMapsBtn.addEventListener("click", () => {
   }
 });
 
+createBillBtn?.addEventListener("click", () => {
+  if (createBillBtn.disabled) return;
+  window.location.href = `./mechanic-bill.html?request_id=${requestId}`;
+});
+
 /* ================= MAP STATE ================= */
 let map = null;
 let ownerMarker = null;
@@ -100,26 +104,30 @@ function stopLiveTracking() {
   }
 }
 
+function waitForGoogleMaps(callback) {
+  const interval = setInterval(() => {
+    if (window.google && window.google.maps) {
+      clearInterval(interval);
+      callback();
+    }
+  }, 100);
+}
+
 /* ================= MAP INIT ================= */
 function initMap(ownerLat, ownerLng, mechLat, mechLng) {
-  if (!window.googleMapsReady) {
-    console.warn("⏳ Waiting for Google Maps...");
-    return;
-  }
 
   if (!window.google || !window.google.maps || map) return;
 
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: mechLat, lng: mechLng },
-    zoom: NAVIGATION_ZOOM,
+    zoom: 16,
     disableDefaultUI: true
   });
 
   directionsService = new google.maps.DirectionsService();
   directionsRenderer = new google.maps.DirectionsRenderer({
     map,
-    suppressMarkers: true,
-    preserveViewport: true   // 🔒 prevents zoom changes
+    suppressMarkers: true
   });
 
   ownerMarker = new google.maps.Marker({
@@ -196,7 +204,8 @@ async function fetchJob() {
   );
 
   /* 🔴 JOB FINISHED STATES */
-  if (data.status === "COMPLETED") {
+  // ✅ Job fully done ONLY after bill confirmation
+  if (data.bill_status === "CONFIRMED") {
     stopLiveTracking();
     localStorage.removeItem("activeRequestId");
     localStorage.removeItem("activeOtp");
@@ -213,6 +222,43 @@ async function fetchJob() {
   }
 
   statusText.innerText = data.status;
+
+  // ================= BILL UI CONTROL (LOCKED) =================
+  const billStatus = data.bill_status || "NOT_CREATED";
+
+  console.log("MECH STATUS:", data.status, "BILL:", data.bill_status);
+
+  /*
+  STATE LOGIC:
+  1. IN_PROGRESS + NOT_CREATED  → Show Create Bill
+  2. CREATED                    → Disable button, waiting state
+  3. CONFIRMED / others         → Hide button
+  */
+
+  if (data.status === "IN_PROGRESS" && billStatus === "NOT_CREATED") {
+    createBillBtn.style.display = "block";
+    createBillBtn.disabled = false;
+    createBillBtn.innerText = "Create Bill";
+  }
+
+  else if (billStatus === "CREATED") {
+    createBillBtn.style.display = "block";
+    createBillBtn.disabled = true;
+    createBillBtn.innerText = "Waiting for owner confirmation";
+  }
+
+  else {
+    createBillBtn.style.display = "none";
+  }
+
+  const billInfoText = document.getElementById("billInfoText");
+
+  if (billStatus === "CREATED") {
+    billInfoText.innerText = "🧾 Bill created. Waiting for owner confirmation.";
+  }
+  else {
+    billInfoText.innerText = "";
+  }
 
   if (data.owner) {
     ownerInfo.innerText =
@@ -233,18 +279,18 @@ async function fetchJob() {
     mapInitStarted = true;
 
     if (DEMO_MODE) {
-      // 🧪 DEMO LOCATION
       mechLoc = { ...MOCK_MECH_LOCATION };
 
-      initMap(
-        ownerLoc.lat,
-        ownerLoc.lng,
-        mechLoc.lat,
-        mechLoc.lng
-      );
+      waitForGoogleMaps(() => {
+        initMap(
+          ownerLoc.lat,
+          ownerLoc.lng,
+          mechLoc.lat,
+          mechLoc.lng
+        );
 
-      sendMechanicLocation(mechLoc.lat, mechLoc.lng);
-      // ✅ ENABLE BUTTON HERE
+        sendMechanicLocation(mechLoc.lat, mechLoc.lng);
+      });
 
     } else {
       // 📍 REAL GPS MODE

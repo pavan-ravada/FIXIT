@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Review Bill</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,sans-serif;
+  background:#f9fafb;
+  color:#111827;
+}
+
+.container{
+  max-width:720px;
+  margin:32px auto;
+  padding:0 16px;
+}
+
+h2{
+  text-align:center;
+  margin-bottom:24px;
+}
+
+/* CARD */
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+/* SECTION TITLE */
+.section-title{
+  font-weight:700;
+  margin-bottom:12px;
+}
+
+/* ROW */
+.bill-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.95rem;
+  margin-bottom:10px;
+}
+
+.bill-row span:last-child{
+  font-weight:600;
+}
+
+/* ITEM NAME */
+.item-name{
+  color:#374151;
+}
+
+/* TOTALS */
+.total-row{
+  display:flex;
+  justify-content:space-between;
+  font-weight:700;
+  margin-top:14px;
+}
+
+.grand{
+  font-size:1.1rem;
+}
+
+/* BUTTON */
+.btn-confirm{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:#000;
+  color:#fff;
+  font-weight:600;
+  font-size:1rem;
+  cursor:pointer;
+}
+
+.btn-confirm:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* INFO */
+.info{
+  text-align:center;
+  font-size:.85rem;
+  color:#6b7280;
+  margin-top:12px;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+  padding:18px 28px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.profile{
+  position:relative;
+}
+
+#profileIcon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:#ffffff;
+}
+
+/* DROPDOWN */
+.dropdown{
+  position:absolute;
+  right:0;
+  top:52px;
+  background:#ffffff;
+  border-radius:12px;
+  min-width:160px;
+  display:none;
+  z-index:2000;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+}
+
+.dropdown.active{display:block}
+
+.dropdown p{
+  padding:12px 16px;
+  cursor:pointer;
+}
+
+.dropdown p+p{
+  border-top:1px solid #e5e7eb;
+}
+
+.dropdown p:hover{
+  background:#f3f4f6;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+  <div class="logo" id="logo">FIXIT</div>
+
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="dashboardBtn">Dashboard</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <h2>Review Bill</h2>
+
+  <!-- ITEMS -->
+  <div class="card">
+    <div class="section-title">Item Charges</div>
+    <div id="itemsList"></div>
+
+    <div class="total-row">
+      <span>Items Total</span>
+      <span id="itemsTotal">₹0</span>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="card">
+    <div class="section-title">Service Charges</div>
+    <div id="servicesList"></div>
+
+    <div class="total-row">
+      <span>Services Total</span>
+      <span id="servicesTotal">₹0</span>
+    </div>
+  </div>
+
+  <!-- GRAND TOTAL -->
+  <div class="card">
+    <div class="total-row grand">
+      <span>Grand Total</span>
+      <span id="grandTotal">₹0</span>
+    </div>
+
+    <button class="btn-confirm" id="confirmBillBtn">
+      Confirm Bill
+    </button>
+
+    <div class="info">
+      Please verify charges before confirming
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById("logo").onclick = () => {
+    window.location.href = "./owner-dashboard.html";
+  };
+
+  document.getElementById("profileIcon").onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById("profileMenu").classList.toggle("active");
+  };
+
+  document.addEventListener("click", () => {
+    document.getElementById("profileMenu").classList.remove("active");
+  });
+
+  document.getElementById("dashboardBtn").onclick = () => {
+    window.location.href = "./owner-dashboard.html";
+  };
+
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.clear();
+    window.location.href = "../index.html";
+  };
+</script>
+
+<script type="module" src="./owner-bill.js"></script>
+</body>
+</html>

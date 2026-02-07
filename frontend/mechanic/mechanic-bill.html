@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIXIT | Create Bill</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  font-family:Inter,sans-serif;
+  background:#f9fafb;
+  color:#111827;
+  min-height:100vh;
+}
+
+/* ================= NAVBAR ================= */
+.navbar{
+  height:68px;
+  padding:0 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#ffffff;
+  border-bottom:1px solid #e5e7eb;
+}
+
+.logo{
+  font-size:1.4rem;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.profile{position:relative}
+
+#profileIcon{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:1px solid #e5e7eb;
+  background:#ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.dropdown{
+  display:none;
+  position:absolute;
+  right:0;
+  top:48px;
+  background:#ffffff;
+  border-radius:14px;
+  min-width:150px;
+  padding:6px 0;
+  box-shadow:0 12px 30px rgba(0,0,0,.12);
+  z-index:100;
+}
+.dropdown.active{display:block}
+.dropdown p{
+  padding:10px 16px;
+  font-size:.9rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.dropdown p:hover{background:#f3f4f6}
+
+/* ================= PAGE ================= */
+.container{
+  max-width:900px;
+  margin:32px auto 40px;
+  padding:0 20px;
+}
+
+h2{
+  text-align:center;
+  margin-bottom:30px;
+  font-size:1.8rem;
+  font-weight:800;
+}
+
+/* ================= CARD ================= */
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:22px;
+}
+
+.section-title{
+  font-weight:700;
+  margin-bottom:14px;
+}
+
+/* ================= ROW ================= */
+.row{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.sub-row{
+  display:flex;
+  flex-direction:row;   /* 🔥 FORCE horizontal */
+  gap:12px;
+}
+
+.sub-row .qty{
+  flex:1;
+}
+
+.sub-row .price{
+  flex:2;
+}
+
+.row input{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+}
+
+/* ================= BUTTONS ================= */
+.btn{
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.btn-add{
+  background:#e5e7eb;
+}
+
+.btn-primary{
+  width:100%;
+  background:#000;
+  color:#fff;
+  margin-top:20px;
+}
+
+/* ================= TOTALS ================= */
+.totals{
+  display:flex;
+  justify-content:space-between;
+  font-weight:600;
+  margin-top:10px;
+}
+.grand{
+  font-size:1.1rem;
+}
+
+/* ================= REMOVE BUTTON ================= */
+.item-header{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.item-header input{flex:1}
+
+.remove-btn{
+  border:none;
+  background:#fee2e2;
+  color:#b91c1c;
+  font-size:16px;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.remove-btn:active{transform:scale(0.95)}
+
+/* ================= MOBILE ================= */
+@media (max-width: 600px) {
+  .row {
+    gap: 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<div class="navbar">
+  <div class="logo" id="logo">FIXIT</div>
+
+  <div class="profile">
+    <div id="profileIcon">👤</div>
+    <div class="dropdown" id="profileMenu">
+      <p id="dashboardBtn">Dashboard</p>
+      <p id="logoutBtn">Logout</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PAGE ================= -->
+<div class="container">
+  <h2>Create Bill</h2>
+
+  <!-- ITEMS -->
+  <div class="card">
+    <div class="section-title">Item Charges</div>
+    <div id="items"></div>
+    <button class="btn btn-add" onclick="addItem()">+ Add Item</button>
+    <div class="totals">
+      <span>Items Total</span>
+      <span id="itemsTotal">₹0</span>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="card">
+    <div class="section-title">Service Charges</div>
+    <div id="services"></div>
+    <button class="btn btn-add" onclick="addService()">+ Add Service</button>
+    <div class="totals">
+      <span>Services Total</span>
+      <span id="servicesTotal">₹0</span>
+    </div>
+  </div>
+
+  <!-- GRAND TOTAL -->
+  <div class="card">
+    <div class="totals grand">
+      <span>Grand Total</span>
+      <span id="grandTotal">₹0</span>
+    </div>
+    <button class="btn btn-primary" onclick="createBill()">Create Bill</button>
+  </div>
+</div>
+
+<!-- ================= NAVBAR LOGIC ================= -->
+<script>
+  const logo = document.getElementById("logo");
+  const profileIcon = document.getElementById("profileIcon");
+  const profileMenu = document.getElementById("profileMenu");
+
+  logo.onclick = () => location.href = "./mechanic-dashboard.html";
+
+  profileIcon.onclick = (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle("active");
+  };
+
+  document.addEventListener("click", () => {
+    profileMenu.classList.remove("active");
+  });
+
+  document.getElementById("dashboardBtn").onclick =
+    () => location.href = "./mechanic-dashboard.html";
+</script>
+
+<script type="module" src="./mechanic-bill.js"></script>
+</body>
+</html>

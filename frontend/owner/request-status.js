@@ -312,6 +312,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `/owner/request/${requestId}?phone=${owner.phone}`
       );
 
+      /* ================= OTP GATE (HARD BLOCK) ================= */
+      if (data.status !== "IN_PROGRESS") {
+        // 🔒 Mask bill completely until OTP verified
+        data.bill_status = null;
+      }
+
       /* ================= STATUS TEXT ================= */
       const statusTextEl = document.getElementById("statusText");
       if (statusTextEl) {
@@ -378,10 +384,44 @@ document.addEventListener("DOMContentLoaded", () => {
       // If timeout already happened earlier, never touch UI again
       if (finalTimeoutReached) return;
 
+
+      /* ================= BILL FLOW ================= */
+
+      if (
+        data.status === "IN_PROGRESS" &&
+        data.bill_status === "CONFIRMED"
+      ) {
+        isNavigatingAway = true;
+        stopPolling();
+
+        localStorage.removeItem("activeRequestId");
+        localStorage.setItem("completedRequestId", requestId);
+
+        window.location.href = "./rating.html";
+        return;
+      }
+
+     /* ================= VIEW BILL UI ================= */
+      const viewBillBtn = document.getElementById("viewBillBtn");
+
+      if (
+        data.status === "IN_PROGRESS" &&
+        (
+          data.bill_status === "CREATED" ||
+          data.bill_status === "AWAITING_BILL_CONFIRMATION"
+        )
+      ) {
+        if (viewBillBtn) viewBillBtn.style.display = "block";
+      } else {
+        if (viewBillBtn) viewBillBtn.style.display = "none";
+      }
+
       /* ================= INIT MAP ================= */
       if (data.ownerLocation && !map) {
         initMap(data.ownerLocation.lat, data.ownerLocation.lng);
       }
+
+      console.log("STATUS:", data.status, "BILL:", data.bill_status);
 
       /* ================= SEARCHING ================= */
       const radiusBox = document.querySelector(".radius-box");
@@ -395,16 +435,10 @@ document.addEventListener("DOMContentLoaded", () => {
           data.created_at
         );
 
-        // Buttons
         const cancelBtn = document.getElementById("cancelBtn");
         if (cancelBtn) cancelBtn.style.display = "block";
 
-        const completeBtn = document.getElementById("completeBtn");
-        if (completeBtn) completeBtn.style.display = "none";
-
-        const otpSection = document.getElementById("otpSection");
-
-        return; // 🔴 DO NOT TRACK MECHANIC
+        return;
       } else {
         if (radiusBox) radiusBox.style.display = "none";
         if (window.radiusInterval) clearInterval(window.radiusInterval);
@@ -453,7 +487,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (completeBtn) {
         completeBtn.style.display =
-          data.status === "IN_PROGRESS" ? "block" : "none";
+          data.status === "IN_PROGRESS" &&
+          data.bill_status === "CONFIRMED"
+            ? "block"
+            : "none";
       }
 
       if (data.status === "IN_PROGRESS") {
@@ -471,8 +508,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
-
+  document.getElementById("viewBillBtn")?.addEventListener("click", () => {
+    window.location.href = "./owner-bill.html";
+  });
 
 
 
